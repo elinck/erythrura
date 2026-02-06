@@ -1,0 +1,22 @@
+executor: slurm
+use-conda: true
+jobs: 50
+latency-wait: 60
+retries: 1
+printshellcmds: true
+keep-going: true
+rerun-incomplete: true
+
+# Cluster defaults for rules unless overridden
+default-resources:
+  mem_mb: 16000
+  runtime: 240          # minutes
+  slurm_partition: priority
+  slurm_account: priority-ethanlinck
+
+# Optional, but helpful to keep slurm logs organized
+# slurm_extra: "--output=logs/slurm/%x.%j.out --error=logs/slurm/%x.%j.err"
+
+# Optional: if your cluster needs it, set:
+# slurm_jobname: "{rule}.{wildcards}"
+

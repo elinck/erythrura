@@ -1,0 +1,12 @@
+name: pixy
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - pixy>=1.2.7
+  - bcftools>=1.15
+  - htslib>=1.15
+  - tabix
+  - python>=3.9
+

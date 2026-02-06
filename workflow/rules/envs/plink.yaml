@@ -1,0 +1,11 @@
+name: plink
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - plink2
+  - plink
+  - bcftools
+  - htslib
+  - tabix
+  - samtools

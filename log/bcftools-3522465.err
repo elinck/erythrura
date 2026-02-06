@@ -1,0 +1,211 @@
+Using workflow specific profile /home/k14m234/erythrura/workflow-profiles/ for setting default command line arguments.
+host: epyc012
+Building DAG of jobs...
+You are running snakemake in a SLURM job context. This is not recommended, as it may lead to unexpected behavior. If possible, please run Snakemake directly on the login node.
+SLURM run ID: 8daa00bd-9123-4b46-ab3c-60b9991d15d7
+MinJobAge 300s (>= 120s). 'squeue' should work reliably for status queries.
+Using shell: /usr/bin/bash
+Provided remote nodes: 50
+Job stats:
+job              count
+-------------  -------
+all                  1
+all_sites_vcf        1
+total                2
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Thu Feb  5 12:33:17 2026]
+rule all_sites_vcf:
+    input: /home/k14m234/erythrura/config/bamlist.txt, /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna, /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna.fai
+    output: results/all_sites/all_sites.vcf.gz, results/all_sites/all_sites.vcf.gz.tbi
+    jobid: 1
+    reason: Missing output files: results/all_sites/all_sites.vcf.gz.tbi
+    threads: 8
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=2048, disk_mib=1954, tmpdir=<TBD>, runtime=240, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        mkdir -p results/all_sites
+
+        bcftools mpileup \
+          -f /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna \
+          -b /home/k14m234/erythrura/config/bamlist.txt \
+          -a AD,DP \
+          -q 30 \
+          -Q 20 \
+          --max-depth 1000 \
+          --threads 8 \
+          -Ou |
+
+        bcftools call \
+          -m \
+          --keep-alts \
+          --threads 8 \
+          -Ou |
+
+        bcftools filter \
+          -e 'INFO/DP==0 || QUAL<20' \
+          -Oz \
+          -o results/all_sites/all_sites.vcf.gz
+
+        tabix -f -p vcf results/all_sites/all_sites.vcf.gz
+        
+Job 1 has been submitted with SLURM jobid 3522466 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_all_sites_vcf/3522466.log).
+[Thu Feb  5 16:34:06 2026]
+Error in rule all_sites_vcf:
+    message: SLURM-job '3522466' failed, SLURM status is: 'TIMEOUT'. For further error details see the cluster/cloud log and the log files of the involved rule(s).
+    jobid: 1
+    input: /home/k14m234/erythrura/config/bamlist.txt, /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna, /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna.fai
+    output: results/all_sites/all_sites.vcf.gz, results/all_sites/all_sites.vcf.gz.tbi
+    log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_all_sites_vcf/3522466.log (check log file(s) for error details)
+    conda-env: /home/k14m234/erythrura/.snakemake/conda/d512b2fedd4e89513192732b57f80f3f_
+    shell:
+        
+        set -euo pipefail
+        mkdir -p results/all_sites
+
+        bcftools mpileup \
+          -f /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna \
+          -b /home/k14m234/erythrura/config/bamlist.txt \
+          -a AD,DP \
+          -q 30 \
+          -Q 20 \
+          --max-depth 1000 \
+          --threads 8 \
+          -Ou |
+
+        bcftools call \
+          -m \
+          --keep-alts \
+          --threads 8 \
+          -Ou |
+
+        bcftools filter \
+          -e 'INFO/DP==0 || QUAL<20' \
+          -Oz \
+          -o results/all_sites/all_sites.vcf.gz
+
+        tabix -f -p vcf results/all_sites/all_sites.vcf.gz
+        
+        (command exited with non-zero exit code)
+    external_jobid: 3522466
+Trying to restart job 1.
+Select jobs to execute...
+Execute 1 jobs...
+
+[Thu Feb  5 16:34:06 2026]
+rule all_sites_vcf:
+    input: /home/k14m234/erythrura/config/bamlist.txt, /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna, /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna.fai
+    output: results/all_sites/all_sites.vcf.gz, results/all_sites/all_sites.vcf.gz.tbi
+    jobid: 1
+    reason: Missing output files: results/all_sites/all_sites.vcf.gz.tbi
+    threads: 8
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=2048, disk_mib=1954, tmpdir=<TBD>, runtime=240, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        mkdir -p results/all_sites
+
+        bcftools mpileup \
+          -f /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna \
+          -b /home/k14m234/erythrura/config/bamlist.txt \
+          -a AD,DP \
+          -q 30 \
+          -Q 20 \
+          --max-depth 1000 \
+          --threads 8 \
+          -Ou |
+
+        bcftools call \
+          -m \
+          --keep-alts \
+          --threads 8 \
+          -Ou |
+
+        bcftools filter \
+          -e 'INFO/DP==0 || QUAL<20' \
+          -Oz \
+          -o results/all_sites/all_sites.vcf.gz
+
+        tabix -f -p vcf results/all_sites/all_sites.vcf.gz
+        
+Job 1 has been submitted with SLURM jobid 3522710 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_all_sites_vcf/3522710.log).
+[Thu Feb  5 20:34:18 2026]
+Error in rule all_sites_vcf:
+    message: SLURM-job '3522710' failed, SLURM status is: 'TIMEOUT'. For further error details see the cluster/cloud log and the log files of the involved rule(s).
+    jobid: 1
+    input: /home/k14m234/erythrura/config/bamlist.txt, /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna, /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna.fai
+    output: results/all_sites/all_sites.vcf.gz, results/all_sites/all_sites.vcf.gz.tbi
+    log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_all_sites_vcf/3522710.log (check log file(s) for error details)
+    conda-env: /home/k14m234/erythrura/.snakemake/conda/d512b2fedd4e89513192732b57f80f3f_
+    shell:
+        
+        set -euo pipefail
+        mkdir -p results/all_sites
+
+        bcftools mpileup \
+          -f /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna \
+          -b /home/k14m234/erythrura/config/bamlist.txt \
+          -a AD,DP \
+          -q 30 \
+          -Q 20 \
+          --max-depth 1000 \
+          --threads 8 \
+          -Ou |
+
+        bcftools call \
+          -m \
+          --keep-alts \
+          --threads 8 \
+          -Ou |
+
+        bcftools filter \
+          -e 'INFO/DP==0 || QUAL<20' \
+          -Oz \
+          -o results/all_sites/all_sites.vcf.gz
+
+        tabix -f -p vcf results/all_sites/all_sites.vcf.gz
+        
+        (command exited with non-zero exit code)
+    external_jobid: 3522710
+Cleaning up SLURM log files older than 10 day(s).
+Exiting because a job execution failed. Look below for error messages
+[Thu Feb  5 20:37:18 2026]
+Error in rule all_sites_vcf:
+    message: None
+    jobid: 1
+    input: /home/k14m234/erythrura/config/bamlist.txt, /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna, /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna.fai
+    output: results/all_sites/all_sites.vcf.gz, results/all_sites/all_sites.vcf.gz.tbi
+    conda-env: /home/k14m234/erythrura/.snakemake/conda/d512b2fedd4e89513192732b57f80f3f_
+    shell:
+        
+        set -euo pipefail
+        mkdir -p results/all_sites
+
+        bcftools mpileup \
+          -f /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna \
+          -b /home/k14m234/erythrura/config/bamlist.txt \
+          -a AD,DP \
+          -q 30 \
+          -Q 20 \
+          --max-depth 1000 \
+          --threads 8 \
+          -Ou |
+
+        bcftools call \
+          -m \
+          --keep-alts \
+          --threads 8 \
+          -Ou |
+
+        bcftools filter \
+          -e 'INFO/DP==0 || QUAL<20' \
+          -Oz \
+          -o results/all_sites/all_sites.vcf.gz
+
+        tabix -f -p vcf results/all_sites/all_sites.vcf.gz
+        
+        (command exited with non-zero exit code)
+Complete log(s): /home/k14m234/erythrura/.snakemake/log/2026-02-05T123310.599623.snakemake.log
+WorkflowError:
+At least one job did not complete successfully.
