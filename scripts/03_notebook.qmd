@@ -1,0 +1,368 @@
+---
+format: html
+---
+
+# Species limits and divergence in New Guinea *Erythrura*
+
+In the New Guinea Highlands, Blue-faced Parrotfinch *Erythrura trichroa* and Papuan Parrotfinch *Erythrura papuana* are broadly sympatric and / or syntopic. In the hand, *E. papuana* is larger, and has a more massive, bulbous bill, potentially linked to its diet (speculatively heavy on figs as opposed to bamboo seeds). However, plumage does not vary between the two, and both are rarely seen in the wild---*E. papuana* particularly. The possibility that their description as separate species based on morphological variaiton in specimens was in error and New Guinea parrotfinches are best described as ecotypes of a single taxon led Devon DeRaad, Lucas DeCicco, Brett Benz, and Rob Moyle to assess genetic divergence using first mitochondrial DNA and then genome-wide SNPs from a RADseq library preparation. Neither dataset proved sufficient to disentangle the two. They then generated moderate (~9x) whole genome sequencing data, which I aligned to the *Lonchura striata* genome and ran through the snpArcher variant calling pipeline to produce filtered .vcf files. Data quality were good, with no outliers in depth of coverage or percentage of reads mapping to *L. stricta.* This notebook addresses the following questions:
+
+1) Are *E. trichroa* and *E. papuana* distinguishable with WGS data?
+2) If so, is divergence concentrated in a handful of regions of the genome?
+3) Does shared genomic variation reflect recent divergence, hybridization, or divergence with gene flow? 
+
+It requires these libraries: 
+
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(tidyverse)
+library(sf)
+library(maps)
+library(ggtree)
+```
+
+We begin by loading metadata and plotting sampling localities over Birdlife International's approximation of the range of the two species: 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# read in samples
+samples <- read_tsv("/home/k14m234/erythrura/scripts/data/samples.tsv")
+pts <- st_as_sf(samples, coords = c("long", "lat"), crs = 4326)
+
+# plot by species and country
+map <- map_data("world")
+trich_range <- st_read("/home/k14m234/erythrura/scripts/data/shp/Erythrura_trichroa_22719712.shp", quiet = TRUE) |> st_make_valid()
+pap_range <- st_read("/home/k14m234/erythrura/scripts/data/shp/Erythrura_papuana_22719721.shp", quiet = TRUE) |> st_make_valid()
+ranges <- bind_rows(trich_range, pap_range)
+world <- st_as_sf(maps:::map("world", plot = FALSE, fill = TRUE))
+world <- st_make_valid(world) |> st_transform(4326)
+bb <- st_bbox(pts)
+pad <- 2  # degrees
+xlim <- c(bb["xmin"] - pad, bb["xmax"] + pad)
+ylim <- c(bb["ymin"] - pad, bb["ymax"] + pad)
+
+ranges2 <- ranges %>%
+  mutate(species = case_when(
+    str_detect(tolower(SCINAME), "papuana")  ~ "papuana",
+    str_detect(tolower(SCINAME), "trichroa") ~ "trichroa",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(species))
+
+# ensure pts species matches too
+pts2 <- pts %>%
+  mutate(species = tolower(species))
+
+xlim <- unname(as.numeric(xlim))
+ylim <- unname(as.numeric(ylim))
+
+# bounding box to deal with polygon issue
+bbox <- sf::st_bbox(c(xmin = xlim[1], xmax = xlim[2],
+                      ymin = ylim[1], ymax = ylim[2]),
+                    crs = sf::st_crs(4326))
+
+# crop world basemap
+world_crop <- world %>%
+  sf::st_make_valid() %>%
+  sf::st_crop(bbox)
+
+# crop shpfiles
+ranges_crop <- ranges2 %>%
+  sf::st_make_valid() %>%
+  sf::st_crop(bbox)
+
+# fix palette
+pal_named <- c(papuana = "yellowgreen",
+               trichroa = "dodgerblue1")
+
+# jittering
+pts2   <- sf::st_set_crs(pts2, 4326)
+pts_p  <- sf::st_transform(pts2, 3857)
+pts_jit <- pts_p %>%
+  mutate(geometry = sf::st_jitter(geometry, amount = 20000))
+
+# plot
+p1 <- ggplot() +
+  geom_sf(data = world_crop, fill = "grey95", color = "grey70", linewidth = 0.2) +
+  geom_sf(data = ranges_crop, aes(fill = species), color = NA, alpha = 0.25) +
+  geom_sf(data = pts_jit, aes(fill = species), shape = 21, color = "black",
+          size = 2.5, alpha = 0.9, stroke = 0.2) +
+  scale_fill_manual(values = pal_named, name = "Species") +
+  coord_sf(xlim = xlim, ylim = ylim, expand = FALSE) +
+  theme_bw() +
+  theme(panel.grid.major = element_line(color = "grey92", linewidth = 0.2))
+p1
+```
+
+Note the outliers here: one *E. trichroa* in Palau (reputedly with a large bill), and another two from Queensland, Australia. We next plot the first two principle components of a PCA run on 101399 SNPs, randomly sampled from a window size set by snpArcher to effectively LD-prune the data set: 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# read pca
+df <- read_tsv("data/all_pcs.tsv")
+var_exp <- (df$sdev^2) / sum(df$sdev^2) * 100
+
+# use same axis limits for both plots
+xlim <- range(df$PC1, na.rm = TRUE)
+ylim <- range(df$PC2, na.rm = TRUE)
+
+# set shp values
+shape_vals <- c(21, 22, 23, 24, 25)
+names(shape_vals) <- unique(df$country)
+
+# plot with all samples
+p2 <- ggplot(df, aes(PC1, PC2)) +
+  geom_point(aes(fill = species, shape = country),
+             size = 2.5, alpha = 0.9, color = "black", stroke = 0.2) +
+  scale_fill_manual(values = pal_named, name = "Species", drop = FALSE) +
+  scale_shape_manual(values = shape_vals, name = "Country") +
+  guides(
+    fill  = guide_legend(override.aes = list(shape = 21, colour = "black")),
+    shape = guide_legend(override.aes = list(fill = "white"))
+  ) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  coord_cartesian(xlim = xlim, ylim = ylim) +
+  labs(x = sprintf("PC1 (%.1f%%)", var_exp[1]),
+       y = sprintf("PC2 (%.1f%%)", var_exp[2]))
+p2
+```
+*E. trichroa* in Australia and Palau drive the observed variation, though New Guinea *papuana* and *trichroa* are distinguishable. Let's re-run PCA and plot only those samples: 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+df_sub <- read_tsv("/home/k14m234/erythrura/scripts/data/pca_sub.tsv")
+var_exp_sub <- (df_sub$sdev^2) / sum(df_sub$sdev^2) * 100
+p3 <- ggplot(df_sub, aes(PC1, PC2)) +
+  geom_point(aes(fill = species, shape = country),
+             size = 2.5, alpha = 0.9, color = "black", stroke = 0.2) +
+  scale_fill_manual(values = pal_named, name = "Species", drop = FALSE) +
+  scale_shape_manual(values = shape_vals, name = "Country") +
+  guides(
+    fill  = guide_legend(override.aes = list(shape = 21, colour = "black")),
+    shape = guide_legend(override.aes = list(fill = "white"))
+  ) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  labs(x = sprintf("PC1 (%.1f%%)", var_exp_sub[1]),
+       y = sprintf("PC2 (%.1f%%)", var_exp_sub[2]))
+p3
+```
+
+Evidence of distinct clusters, with Solomons and PNG *trichroa* showing no geographic substructure. Another way to visualize this subtle differentiation is with a neighbor-joining tree. Here is one build from Nei's genetic distance (D), rooted at the midpoint, and ladderized:
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# write distance matrice
+nj_tree <- read.tree("/home/k14m234/erythrura/scripts/data/nj_distance.tre")
+  
+# shapevals
+shape_vals <- c(21, 22, 23, 24, 25)
+names(shape_vals) <- unique(samples$country)
+
+# Plot (base R)
+p4 <- ggtree(nj_tree, layout = "daylight", size = 0.5) %<+% samples +
+  geom_tippoint(aes(fill = species, shape = country),
+                size = 2.5,
+                color = "black",
+                stroke = 0.25) +
+  #geom_tiplab(size = 2.5, align = TRUE, offset = 0.002) +
+  scale_fill_manual(values = pal_named, name = "Species") +
+  scale_shape_manual(values = shape_vals, name = "Country") +
+  guides(
+    fill  = guide_legend(override.aes = list(shape = 21)),
+    shape = guide_legend(override.aes = list(fill = "white"))
+  ) +
+  theme(plot.margin = margin(5.5, 40, 5.5, 5.5))
+
+p4
+```
+
+An obvious next step is to look at how divergence between species is distributed across the genome. We will do so using the `vcftools` to calculating sliding window $F_{ST}$ on same ~100K SNPs (50K window size, 10K step size). We ran the analysis twice: once on all samples, and once on only samples from New Guinea. Here are Manhattan plots of the results: 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# manhattan plot of all samples 
+fst <- read_delim("/home/k14m234/erythrura/results/vcftools/species_fst_w50k_s10k.windowed.weir.fst", delim = "\t")
+chr_map <- read_tsv("/home/k14m234/erythrura/scripts/data/nc_to_chr.tsv",col_names = c("CHROM", "chr"))
+fst_chr <- fst %>% left_join(chr_map, by = "CHROM")
+chr_levels <- c("1","1A",as.character(2:29),"Z")
+fst_chr$chr <- factor(fst_chr$chr, levels = chr_levels)
+fst_chr <- fst_chr %>%
+  group_by(chr) %>%
+  mutate(chr_len = max(BIN_END)) %>%
+  ungroup()
+fst_chr$chr <- factor(fst_chr$chr, levels = chr_levels)
+fst_chr <- fst_chr %>%
+  arrange(chr, BIN_START) %>%
+  mutate(chr_offset = cumsum(chr_len) - chr_len,
+         bp_cum = BIN_START + chr_offset)
+fst_chr <- fst_chr %>%
+  filter(chr != "MT")
+axis_df <- fst_chr %>%
+  group_by(chr) %>%
+  summarize(
+    mid = mean(bp_cum),
+    chr_size = max(BIN_END)
+  ) %>%
+  filter(chr_size >= 2.5e7)
+
+# ensure levels are exactly what you intend
+chr_levels <- c("1","1A",as.character(2:29),"Z")
+fst_chr$chr <- factor(fst_chr$chr, levels = chr_levels)
+fst_chr <- fst_chr %>%
+  arrange(chr, BIN_START) %>%
+  mutate(chr_offset = cumsum(chr_len) - chr_len,
+         bp_cum = BIN_START + chr_offset)
+fst_chr <- fst_chr %>%
+  filter(chr != "MT")
+
+# manhattan plot of ingroup
+fst_in <- read_delim("/home/k14m234/erythrura/results/vcftools/ingroup_fst_w50k_s10k.windowed.weir.fst", delim = "\t")
+fst_in_chr <- fst_in %>% left_join(chr_map, by = "CHROM")
+fst_in_chr$chr <- factor(fst_in_chr$chr, levels = chr_levels)
+fst_in_chr <- fst_in_chr %>%
+  group_by(chr) %>%
+  mutate(chr_len = max(BIN_END)) %>%
+  ungroup()
+fst_in_chr$chr <- factor(fst_in_chr$chr, levels = chr_levels)
+fst_in_chr <- fst_in_chr %>%
+  arrange(chr, BIN_START) %>%
+  mutate(chr_offset = cumsum(chr_len) - chr_len,
+         bp_cum = BIN_START + chr_offset)
+fst_in_chr <- fst_in_chr %>%
+  filter(chr != "MT")
+axis_df_in <- fst_in_chr %>%
+  group_by(chr) %>%
+  summarize(
+    mid = mean(bp_cum),
+    chr_size = max(BIN_END)
+  ) %>%
+  filter(chr_size >= 2.5e7)
+
+# ensure levels are exactly what you intend
+fst_in_chr$chr <- factor(fst_in_chr$chr, levels = chr_levels)
+fst_in_chr <- fst_in_chr %>%
+  arrange(chr, BIN_START) %>%
+  mutate(chr_offset = cumsum(chr_len) - chr_len,
+         bp_cum = BIN_START + chr_offset)
+fst_in_chr <- fst_in_chr %>%
+  filter(chr != "MT")
+
+pal <- rep(c("yellowgreen", "dodgerblue1"), length.out = length(chr_levels))
+thr <- quantile(fst_chr$MEAN_FST, 0.999, na.rm = TRUE)
+
+fst_chr$panel     <- "All Samples"
+fst_in_chr$panel  <- "Excluding Australia + Palau"
+fst_both <- bind_rows(fst_chr, fst_in_chr)
+p5 <- ggplot(fst_both, aes(x = bp_cum, y = MEAN_FST, color = chr)) +
+  geom_point(size = 1, alpha = 0.5) +
+  scale_color_manual(values = pal, drop = FALSE) +
+  coord_cartesian(ylim = c(-0.05, NA)) +
+  scale_x_continuous(breaks = axis_df$mid, labels = axis_df$chr) +
+  geom_hline(yintercept = thr,
+             linetype = "dashed",
+             color = "red",
+             linewidth = 0.6,
+             alpha=0.6) +
+  theme_bw() +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank()
+  ) +
+  labs(x = "Chromosome", y = "Mean FST") +
+  facet_wrap(~panel, ncol = 1)
+p5
+```
+
+Not a big difference, surprisingly. It seems like PCA exaggerates the differentiation of the three outlier samples---or perhaps that their influence on allele frequencies and thus $F_{ST}$ is minor. 
+
+Our next question is whether *trichroa* and *erythrura* are similar due to recent divergence and shared ancestry, secondary contact and hybridization, or divergence with gene flow. We fit demographic models in `dadi2`, ran optimization replicates, and estimated parameter uncertainty via bootstrapping. An IM model is a better fit than either SC or SI ("strict isolation"), though note the spread across replicates:
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# compare model fit
+im <- read_tsv("/home/k14m234/erythrura/scripts/dadi/im_model.tsv", col_names = FALSE)
+sc <- read_tsv("/home/k14m234/erythrura/scripts/dadi/sc_model.tsv", col_names = FALSE)
+si <- read_tsv("/home/k14m234/erythrura/scripts/dadi/si_model.tsv", col_names = FALSE)
+colnames(im) <- c("rep","ll_model", "nTri","nPap","tSplit","m12","m21","theta")
+colnames(sc) <- c("rep","ll_model", "nTri","nPap","tSplit","tContact","m12","m21","theta")
+colnames(si) <- c("rep","ll_model", "nTri","nPap","tSplit", "theta")
+im_df <- im %>% mutate(model = "IM", AIC = -2*ll_model + 2*6) %>% select(model, AIC, ll_model)
+sc_df <- sc %>% mutate(model = "SC", AIC = -2*ll_model + 2*7) %>% select(model, AIC, ll_model)
+si_df <- si %>% mutate(model = "SI", AIC = -2*ll_model + 2*4) %>% select(model, AIC, ll_model)
+mod_df <- bind_rows(im_df, sc_df, si_df)
+
+# select top 20 models
+df_top <- mod_df %>%
+  group_by(model) %>%
+  slice_max(ll_model, n = 20)   # keep top 20 per model
+
+# plot model comparison
+p8 <- ggplot(df_top, aes(x=model,y=ll_model)) +
+  geom_boxplot() +
+  geom_jitter(pch=21, size=2) +
+  theme_classic() +
+  theme(panel.grid = element_blank()) +
+  ylab("Log-likelihood") +
+  xlab("Model")
+p8
+```
+The best run is an IM run by AIC and log-likelihood:
+
+```{r, message=FALSE, warning=FALSE}
+best_aic <- mod_df[which.min(mod_df$AIC),]
+best_ll <- mod_df[which.max(mod_df$ll_model),]
+best_aic
+best_ll
+```
+Here are the parameter estimates for that run:
+
+```{r, message=FALSE, warning=FALSE}
+params <- read_tsv("/home/k14m234/erythrura/scripts/dadi/im_ci.tsv", col_names = FALSE)
+colnames(params) <- c("rep", "ll_model", "name", "est", "se_i", "lo", "hi")
+best_rep <- params[which.max(params$ll_model),]$rep
+best_params <- params %>% filter(rep==best_rep)
+best_params
+```
+
+We can convert these to "real units" with an estimated mutation rate, sequence coverage, and generation time: 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+mu <- 2.3e-9            # per-site per-generation mutation rate
+L  <- 1010218420        # from awk '{sum += $3-$2} END{print sum}' erythrura_callable_sites.bed 
+gen_time <- 1.0         # probably
+model_fits <- im %>% select(rep, theta)
+params_real <- params %>%
+  left_join(model_fits, by = "rep") %>%
+  mutate(
+    Nref = theta / (4 * mu * L)
+  )
+best_params_real <- params_real %>% filter(rep==best_rep)
+best_params_real <- best_params_real %>%
+  mutate(
+    real_unit = case_when(
+      name %in% c("nu1","nu2") ~ "individuals",
+      name %in% c("T","T1","T2") ~ "generations/years",
+      name %in% c("m12","m21") ~ "per_generation",
+      TRUE ~ "model_units"
+    ),
+    real_est = case_when(
+      name %in% c("nu1","nu2") ~ est * Nref,
+      name %in% c("T","T1","T2") ~ est * 2 * Nref,
+      name %in% c("m12","m21") ~ est / (2 * Nref),
+      TRUE ~ est
+    ),
+    real_low = case_when(
+      name %in% c("nu1","nu2") ~ lo * Nref,
+      name %in% c("T","T1","T2") ~ lo * 2 * Nref,
+      name %in% c("m12","m21") ~ lo / (2 * Nref),
+      TRUE ~ lo
+    ),
+    real_high = case_when(
+      name %in% c("nu1","nu2") ~ hi * Nref,
+      name %in% c("T","T1","T2") ~ hi * 2 * Nref,
+      name %in% c("m12","m21") ~ hi / (2 * Nref),
+      TRUE ~ hi
+    ),
+    # add years for time params
+    real_est_years = if_else(name %in% c("T","T1","T2"), real_est * gen_time, NA_real_),
+    real_low_years = if_else(name %in% c("T","T1","T2"), real_low * gen_time, NA_real_),
+    real_high_years = if_else(name %in% c("T","T1","T2"), real_high * gen_time, NA_real_)
+  )
+best_params_real %>% select(name, real_unit, real_est, real_low, real_high, real_est_years)
+```
+Not particularly realistic! Will need to keep optimizing. 

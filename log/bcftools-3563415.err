@@ -1,0 +1,54 @@
+Using workflow specific profile /home/k14m234/erythrura/workflow-profiles/ for setting default command line arguments.
+host: epyc004
+Building DAG of jobs...
+You are running snakemake in a SLURM job context. This is not recommended, as it may lead to unexpected behavior. If possible, please run Snakemake directly on the login node.
+SLURM run ID: 69f53d3e-3522-4881-9e07-75fac00092d1
+MinJobAge 300s (>= 120s). 'squeue' should work reliably for status queries.
+Using shell: /usr/bin/bash
+Provided remote nodes: 50
+Job stats:
+job              count
+-------------  -------
+all                  1
+all_sites_vcf        1
+total                2
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Thu Feb 12 12:10:36 2026]
+rule all_sites_vcf:
+    input: /home/k14m234/erythrura/config/bamlist.txt, /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna, /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna.fai
+    output: results/all_sites/all_sites.vcf.gz, results/all_sites/all_sites.vcf.gz.tbi
+    jobid: 1
+    reason: Missing output files: results/all_sites/all_sites.vcf.gz.tbi
+    threads: 8
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=2048, disk_mib=1954, tmpdir=<TBD>, runtime=4320, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        mkdir -p results/all_sites
+
+        bcftools mpileup \
+          -f /home/k14m234/erythrura_assembly/results/GCF_005870125.1/data/genome/GCF_005870125.1.fna \
+          -b /home/k14m234/erythrura/config/bamlist.txt \
+          -a AD,DP \
+          -q 30 \
+          -Q 20 \
+          --max-depth 1000 \
+          --threads 8 \
+          -Ou |
+
+        bcftools call \
+          -m \
+          --keep-alts \
+          --threads 8 \
+          -Ou |
+
+        bcftools filter \
+          -e 'INFO/DP==0 || QUAL<20' \
+          -Oz \
+          -o results/all_sites/all_sites.vcf.gz
+
+        tabix -f -p vcf results/all_sites/all_sites.vcf.gz
+        
+Job 1 has been submitted with SLURM jobid 3563416 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_all_sites_vcf/3563416.log).

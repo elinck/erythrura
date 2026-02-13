@@ -5,9 +5,9 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
-#SBATCH --time=6-00:00:00
-#SBATCH --output=bcftools-%j.out
-#SBATCH --error=bcftools-%j.err
+#SBATCH --time=06-00:00:00
+#SBATCH --output=log/bcftools-%j.out
+#SBATCH --error=log/bcftools-%j.err
 #SBATCH --mail-user=ethan.linck@montana.edu
 #SBATCH --mail-type=ALL
 

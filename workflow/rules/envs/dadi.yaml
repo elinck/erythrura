@@ -1,0 +1,12 @@
+name: dadi
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.X
+  - dadi
+  - numpy
+  - scipy
+  - nlopt
+  - matplotlib
+  - ipython
+  - ipykernel
