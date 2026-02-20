@@ -4,8 +4,8 @@
 #SBATCH --job-name=bcftools
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --time=06-00:00:00
+#SBATCH --cpus-per-task=8
+#SBATCH --time=12-00:00:00
 #SBATCH --output=log/bcftools-%j.out
 #SBATCH --error=log/bcftools-%j.err
 #SBATCH --mail-user=ethan.linck@montana.edu
@@ -19,6 +19,7 @@ mamba activate snakemake
 snakemake --executor slurm \
   -s /home/k14m234/erythrura/Snakefile \
   -d /home/k14m234/erythrura \
-  --workflow-profile /home/k14m234/erythrura/workflow-profiles/
+  --workflow-profile /home/k14m234/erythrura/workflow-profiles/ \
+  --rerun-incomplete
 
 

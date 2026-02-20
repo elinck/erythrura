@@ -9,6 +9,12 @@ library(sf)
 library(phangorn)
 library(StAMPP)
 library(ggtree)
+library(ggrepel)
+library(glue)
+library(patchwork)
+library(clusterProfiler)
+library(org.Gg.eg.db)
+library(AnnotationDbi)
 
 # read in samples
 samples <- read_tsv("/home/k14m234/erythrura/scripts/data/samples.tsv")
@@ -107,7 +113,7 @@ df <- as.data.frame(pca$x) %>%
   rownames_to_column("sample_id") %>%
   left_join(samples, by = "sample_id")
 
-# (optional) lock factor order so colors don’t flip
+# lock factor order so colors don’t flip
 df$species <- factor(df$species, levels = names(pal_named))
 
 # write pcs
@@ -203,6 +209,180 @@ ggsave(
   units = "in"
 )
 
+# admixture plots!
+fam_path  <- "/home/k14m234/erythrura/results/admixture/erythrura.admix.fam"
+runs_root <- "/home/k14m234/erythrura/results/admixture/runs"
+read_fam <- function(path) {
+  read_table(path, col_names = c("FID","IID","PID","MID","SEX","PHENO"),
+              col_types = cols(.default = col_character()))
+}
+
+parse_species <- function(iid) {
+  # based on your IDs: ..._papuana or ..._trichroa
+  case_when(
+    str_detect(iid, "_papuana$")  ~ "papuana",
+    str_detect(iid, "_trichroa$") ~ "trichroa",
+    TRUE ~ NA_character_
+  )
+}
+parse_cv <- function(log_text) {
+  # e.g. "CV error (K=2): 0.72541"
+  m <- str_match(log_text, "CV error \\(K=\\d+\\):\\s*([0-9.]+)")
+  as.numeric(m[,2])
+}
+
+read_q <- function(q_path) {
+  # read without colnames, let readr determine number of cols
+  q <- readr::read_table2(q_path, col_names = FALSE, col_types = readr::cols())
+  # rename to Q1..QK based on actual K
+  names(q) <- paste0("Q", seq_len(ncol(q)))
+  q
+}
+
+fam <- read_fam(fam_path) %>%
+  mutate(species = parse_species(IID))
+
+q_files <- list.files(runs_root, pattern = "\\.Q$", recursive = TRUE, full.names = TRUE)
+
+runs <- tibble(q_path = q_files) %>%
+  mutate(
+    # parse K and rep from path
+    K   = as.integer(str_match(q_path, "/K(\\d+)/")[,2]),
+    rep = as.integer(str_match(q_path, "/rep(\\d+)/")[,2]),
+    dir = dirname(q_path),
+    log_path = file.path(dir, "run.log")
+  ) %>%
+  filter(!is.na(K), !is.na(rep)) %>%
+  distinct(K, rep, .keep_all = TRUE) %>%
+  arrange(K, rep)
+
+runs <- runs %>% 
+  mutate(log_txt = map_chr(log_path, ~ if (file.exists(.x)) read_file(.x) else ""), 
+    cv = map_dbl(log_txt, parse_cv)) %>% select(-log_txt)
+
+best_runs <- runs %>%
+  group_by(K) %>%
+  arrange(cv, rep, .by_group = TRUE) %>%
+  slice(1) %>%
+  ungroup()
+
+check <- best_runs %>%
+  mutate(ncol_q = purrr::map_int(q_path, ~ ncol(readr::read_table2(.x, col_names = FALSE)))) %>%
+  mutate(ok = (ncol_q == K))
+print(check)
+
+write_tsv(runs, file.path("/home/k14m234/erythrura/results/admixture", "cv_all_reps.tsv"))
+write_tsv(best_runs, file.path("/home/k14m234/erythrura/results/admixture", "cv_best_by_K.tsv"))
+
+best_q_long <- best_runs %>%
+  mutate(q_df = purrr::map(q_path, read_q)) %>%
+  mutate(
+    q_long = purrr::map2(q_df, K, ~{
+      # .x is wide Q table with exactly K columns for this run
+      stopifnot(ncol(.x) == .y)
+      names(.x) <- paste0("Q", seq_len(.y))
+      dplyr::bind_cols(fam %>% dplyr::select(IID, species), .x) %>%
+        tidyr::pivot_longer(dplyr::starts_with("Q"),
+                            names_to = "cluster", values_to = "q") %>%
+        dplyr::mutate(cluster = as.integer(stringr::str_remove(cluster, "Q")))
+    })
+  ) %>%
+  dplyr::select(K, rep, q_long) %>%
+  tidyr::unnest(q_long)
+write_tsv(best_q_long, file.path("/home/k14m234/erythrura/results/admixture", "bestQ_long.tsv"))
+
+best_q_wide <- best_q_long %>%
+  select(K, rep, IID, species, cluster, q) %>%
+  pivot_wider(names_from = cluster, values_from = q, names_prefix = "Q")
+
+write_tsv(best_q_wide, file.path("/home/k14m234/erythrura/results/admixture", "bestQ_wide.tsv"))
+
+# plot scatter
+p4 <- runs %>%
+  ggplot(aes(x = K, y = cv)) +
+  geom_point() +
+  geom_line(data = best_runs, linewidth = 0.6) +
+  theme_bw() +
+  labs(x = "K", y = "CV error", title = "ADMIXTURE cross-validation across replicates")
+
+# export
+ggsave(
+  filename = "/home/k14m234/erythrura/scripts/figures/admixture_cv.pdf",
+  plot = p4,
+  device = cairo_pdf,
+  width = 5,
+  height = 4,
+  units = "in"
+)
+
+# order individuals (same as before)
+order_tbl <- best_q_long %>%
+  group_by(K, IID, species) %>%
+  summarise(maxQ = max(q), .groups="drop") %>%
+  arrange(K, species, desc(maxQ), IID) %>%
+  group_by(K) %>%
+  mutate(order = row_number()) %>%
+  ungroup()
+
+plot_df <- best_q_long %>%
+  left_join(order_tbl, by=c("K","IID","species")) %>%
+  filter(K %in% c(2,3,4,5)) %>% 
+  mutate(IID = factor(IID, levels = unique(IID[order(order)])))
+
+write_tsv(plot_df, "/home/k14m234/erythrura/scripts/data/admixture.tsv")
+
+p5 <- plot_df %>%
+  ggplot(aes(x = IID, y = q, fill = factor(cluster))) +
+  geom_col(width = 1, color="white") +
+  facet_wrap(~ K, ncol = 1) +
+  theme_bw() +
+  theme(
+    axis.text.x  = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 6),
+    axis.ticks.x = element_blank(),
+    panel.spacing = unit(0.15, "in"),
+    strip.background = element_blank(),
+  ) +
+  labs(x = NULL, y = "Ancestry proportion", fill = "Cluster",
+       title = "ADMIXTURE best replicate per K")
+
+# export
+ggsave(
+  filename = "/home/k14m234/erythrura/scripts/figures/admixture_k_2_5.pdf",
+  plot = p5,
+  device = cairo_pdf,
+  width = 5,
+  height = 6,
+  units = "in"
+)
+
+# subset for k2
+plot_k2 <- plot_df %>% filter(K==2)
+
+# plot k2
+p6 <- plot_k2 %>%
+  ggplot(aes(x = IID, y = q, fill = factor(cluster))) +
+  geom_col(width = 1, color="white") +
+  scale_fill_manual(values=c("yellowgreen", "dodgerblue1")) +
+  theme_bw() +
+  theme(
+    axis.text.x  = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 6),
+    axis.ticks.x = element_blank(),
+    panel.spacing = unit(0.15, "in"),
+    strip.background = element_blank(),
+    panel.grid = element_blank(),
+  ) +
+  labs(x = NULL, y = "Ancestry proportion", fill = "Cluster")
+
+# export
+ggsave(
+  filename = "/home/k14m234/erythrura/scripts/figures/admixture_k_2.pdf",
+  plot = p6,
+  device = cairo_pdf,
+  width = 6,
+  height = 3,
+  units = "in"
+)
+
 # manhattan plot of all samples 
 fst <- read_delim("erythrura/results/vcftools/species_fst_w50k_s10k.windowed.weir.fst", delim = "\t")
 chr_map <- read_tsv("/home/k14m234/erythrura/scripts/data/nc_to_chr.tsv",col_names = c("CHROM", "chr"))
@@ -228,20 +408,10 @@ axis_df <- fst_chr %>%
   ) %>%
   filter(chr_size >= 2.5e7)
 
-# ensure levels are exactly what you intend
-chr_levels <- c("1","1A",as.character(2:29),"Z")
-fst_chr$chr <- factor(fst_chr$chr, levels = chr_levels)
-fst_chr <- fst_chr %>%
-  arrange(chr, BIN_START) %>%
-  mutate(chr_offset = cumsum(chr_len) - chr_len,
-         bp_cum = BIN_START + chr_offset)
-fst_chr <- fst_chr %>%
-  filter(chr != "MT")
-
 pal <- rep(c("yellowgreen", "dodgerblue1"), length.out = length(chr_levels))
-thr <- quantile(fst_chr$MEAN_FST, 0.999, na.rm = TRUE)
+thr <- quantile(fst_chr$MEAN_FST, 0.9999, na.rm = TRUE)
 
-p4 <- ggplot(fst_chr, aes(x = bp_cum, y = MEAN_FST, color = chr)) +
+p7 <- ggplot(fst_chr, aes(x = bp_cum, y = MEAN_FST, color = chr)) +
   geom_point(size = 1, alpha = 0.5) +
   scale_color_manual(values = pal, drop = FALSE) +
   coord_cartesian(ylim = c(-0.05, NA)) +
@@ -261,7 +431,7 @@ p4 <- ggplot(fst_chr, aes(x = bp_cum, y = MEAN_FST, color = chr)) +
 # export
 ggsave(
   filename = "/home/k14m234/erythrura/scripts/figures/manhattan.pdf",
-  plot = p4,
+  plot = p7,
   device = cairo_pdf,
   width = 9,
   height = 4,
@@ -291,16 +461,7 @@ axis_df_in <- fst_in_chr %>%
   ) %>%
   filter(chr_size >= 2.5e7)
 
-# ensure levels are exactly what you intend
-fst_in_chr$chr <- factor(fst_in_chr$chr, levels = chr_levels)
-fst_in_chr <- fst_in_chr %>%
-  arrange(chr, BIN_START) %>%
-  mutate(chr_offset = cumsum(chr_len) - chr_len,
-         bp_cum = BIN_START + chr_offset)
-fst_in_chr <- fst_in_chr %>%
-  filter(chr != "MT")
-
-p5 <- ggplot(fst_in_chr, aes(x = bp_cum, y = MEAN_FST, color = chr)) +
+p8 <- ggplot(fst_in_chr, aes(x = bp_cum, y = MEAN_FST, color = chr)) +
   geom_point(size = 1, alpha = 0.5) +
   scale_color_manual(values = pal, drop = FALSE) +
   coord_cartesian(ylim = c(-0.05, NA)) +
@@ -320,7 +481,7 @@ p5 <- ggplot(fst_in_chr, aes(x = bp_cum, y = MEAN_FST, color = chr)) +
 # export
 ggsave(
   filename = "/home/k14m234/erythrura/scripts/figures/manhattan_in.pdf",
-  plot = p5,
+  plot = p8,
   device = cairo_pdf,
   width = 9,
   height = 4,
@@ -331,7 +492,7 @@ ggsave(
 fst_chr$panel     <- "All Samples"
 fst_in_chr$panel  <- "Excluding Australia + Palau"
 fst_both <- bind_rows(fst_chr, fst_in_chr)
-p6 <- ggplot(fst_both, aes(x = bp_cum, y = MEAN_FST, color = chr)) +
+p9 <- ggplot(fst_both, aes(x = bp_cum, y = MEAN_FST, color = chr)) +
   geom_point(size = 1, alpha = 0.5) +
   scale_color_manual(values = pal, drop = FALSE) +
   coord_cartesian(ylim = c(-0.05, NA)) +
@@ -351,13 +512,237 @@ p6 <- ggplot(fst_both, aes(x = bp_cum, y = MEAN_FST, color = chr)) +
 
 ggsave(
   filename = "/home/k14m234/erythrura/scripts/figures/manhattan_facet.pdf",
-  plot = p6,
+  plot = p9,
   device = cairo_pdf,
   width = 9,
   height = 6,
   units = "in"
 )
 
+# outliers: all windows
+fst_out <- read_tsv("/home/k14m234/erythrura/results/fst/all_windows_with_genes.tsv.gz",
+                    show_col_types = FALSE) %>%
+  mutate(
+    CHROM = as.character(CHROM),
+    BIN_START = as.integer(BIN_START),
+    BIN_END   = as.integer(BIN_END),
+    mid = (BIN_START + BIN_END) / 2
+)
+
+# map accessions -> chr labels (your existing mapping)
+fst_out_chr <- fst_out %>%
+  left_join(chr_map, by = "CHROM") %>%
+  filter(!is.na(chr)) %>%                    # drop unmapped contigs if any
+  mutate(chr = factor(chr, levels = chr_levels)) %>%
+  filter(chr != "MT")                        # optional
+
+# per-chromosome table with lengths + offsets
+chr_tbl <- fst_out_chr %>%
+  group_by(chr) %>%
+  summarise(chr_len = max(BIN_END, na.rm = TRUE), .groups="drop") %>%
+  arrange(chr) %>%
+  mutate(chr_offset = lag(cumsum(chr_len), default = 0))
+
+# reattach and compute bp_cum safely
+fst_out_chr <- fst_out_chr %>%
+  left_join(chr_tbl, by = "chr") %>%
+  arrange(chr, BIN_START) %>%
+  mutate(bp_cum = BIN_START + chr_offset)
+
+axis_df_out <- fst_out_chr %>%
+  group_by(chr) %>%
+  summarise(
+    mid = (min(bp_cum, na.rm = TRUE) + max(bp_cum, na.rm = TRUE)) / 2,
+    chr_size = max(BIN_END, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  filter(chr_size >= 2.5e7, !is.na(mid))
+
+# threshold (top 0.1% by default)
+thr <- quantile(fst_in_chr$MEAN_FST, 0.9999, na.rm = TRUE)
+
+# candidate list
+cands <- read_lines("erythrura/config/candidates_beak.txt") %>%
+  str_trim() %>%
+  discard(~ .x == "" | str_starts(.x, "#")) %>%
+  unique()
+
+# find best hit per candidate gene 
+cand_hits <- fst_out_chr %>%
+  filter(!is.na(genes), genes != ".") %>%
+  separate_rows(genes, sep = ",") %>%
+  mutate(genes = str_trim(genes)) %>%
+  filter(genes %in% cands) %>%
+  group_by(genes) %>%
+  slice_max(order_by = MEAN_FST, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  rename(gene = genes) %>%
+  mutate(fst_pct = percent_rank(MEAN_FST))
+
+# find outliers
+outlier_hits <- fst_out_chr %>%
+  filter(!is.na(genes), genes != ".") %>%
+  separate_rows(genes, sep = ",") %>%
+  mutate(genes = str_trim(genes)) %>%
+  filter(MEAN_FST > thr) %>%
+  group_by(genes) %>%
+  slice_max(order_by = MEAN_FST, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  rename(gene = genes) %>%
+  mutate(fst_pct = percent_rank(MEAN_FST))
+
+# plot same aesthetic
+p10 <- ggplot(fst_out_chr, aes(x = bp_cum, y = MEAN_FST, color = chr)) +
+  geom_point(size = 1, alpha = 0.5) +
+  scale_color_manual(values = pal, drop = FALSE) +
+  coord_cartesian(ylim = c(-0.05, NA)) +
+  scale_x_continuous(breaks = axis_df_out$mid, labels = axis_df_out$chr) +
+  geom_hline(yintercept = thr,
+             linetype = "dashed",
+             color = "red",
+             linewidth = 0.6,
+             alpha = 0.6) +
+  geom_point(
+    data = cand_hits,
+    aes(x = bp_cum, y = MEAN_FST),
+    inherit.aes = FALSE,
+    shape = 21, color = "black", stroke = 0.5, fill = "orange", 
+    size = 3, alpha = 0.9
+  ) +
+  geom_point(
+    data = outlier_hits,
+    aes(x = bp_cum, y = MEAN_FST),
+    inherit.aes = FALSE,
+    shape = 21, color = "black", stroke = 0.5, fill = "purple", 
+    size = 3, alpha = 0.7
+  ) +
+  ggrepel::geom_text_repel(
+    data = cand_hits,
+    aes(x = bp_cum, y = MEAN_FST, label = gene),
+    inherit.aes = FALSE,
+    size = 3, max.overlaps = 50
+  ) +
+  ggrepel::geom_text_repel(
+    data = outlier_hits,
+    aes(x = bp_cum, y = MEAN_FST, label = gene),
+    inherit.aes = FALSE,
+    size = 3, max.overlaps = 50
+  ) +
+  theme_bw() +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank()
+  ) +
+  labs(x = "Chromosome", y = "Mean FST")
+
+# export
+ggsave(
+  filename = "/home/k14m234/erythrura/scripts/figures/manhattan_candidates.pdf",
+  plot = p10,
+  device = cairo_pdf,
+  width = 9,
+  height = 4,
+  units = "in"
+)
+
+# outlier go dotplot 
+candidate_genes <- fst_out_chr %>%
+  filter(MEAN_FST >= thr, genes != ".", !is.na(genes)) %>%
+  separate_rows(genes, sep = ",") %>%
+  mutate(genes = str_trim(genes)) %>%
+  distinct(genes) %>%
+  pull(genes)
+
+# check mapping success
+mapped <- bitr(candidate_genes,
+               fromType = "SYMBOL",
+               toType = "ENTREZID",
+               OrgDb = org.Gg.eg.db)
+
+length(unique(mapped$SYMBOL)) / length(candidate_genes)
+
+# filter genes to db
+all_genes <- fst_out_chr %>%
+  filter(genes != ".", !is.na(genes)) %>%
+  separate_rows(genes, sep = ",") %>%
+  mutate(genes = str_trim(genes)) %>%
+  distinct(genes) %>%
+  pull(genes)
+
+# enrich!
+ego <- enrichGO(
+  gene = candidate_genes,
+  universe = all_genes,
+  OrgDb = org.Gg.eg.db,
+  keyType = "SYMBOL",
+  ont = "BP",
+  pAdjustMethod = "BH"
+)
+ego
+
+# grep for families
+special_genes <- grep("BMP|WNT|FGF|SHH|HOX|DLX|MSX|RUNX", candidate_genes, value = TRUE)
+special_hits <- fst_out_chr %>%
+  filter(!is.na(genes), genes != ".") %>%
+  separate_rows(genes, sep=",") %>%
+  mutate(genes = str_trim(genes)) %>%
+  filter(genes %in% special_genes)
+
+# check chr clustering
+special_hits %>%
+  dplyr::select(gene=genes, CHROM, chr, BIN_START, BIN_END, MEAN_FST) %>%
+  arrange(CHROM, BIN_START)
+
+# check peak around BMP10
+bmp10_region <- fst_out_chr %>%
+  filter(CHROM == "NC_042587.1",
+         BIN_START >= 3600000,x
+         BIN_START <= 5600000)
+
+# check ID of special genes
+clean_genes <- candidate_genes[!grepl("^LOC|^TRNA", candidate_genes)]
+desc <- AnnotationDbi::select(
+  org.Gg.eg.db,
+  keys = clean_genes,
+  keytype = "SYMBOL",
+  columns = c("SYMBOL","GENENAME")
+)
+
+# plot around BMP 10
+p11 <- ggplot(bmp10_region, aes(BIN_START, MEAN_FST)) +
+  geom_point() +
+  geom_line() +
+  theme_bw() +
+  xlab("position") +
+  ylab("mean FST")
+
+# export
+ggsave(
+  filename = "/home/k14m234/erythrura/scripts/figures/bmp10_window.pdf",
+  plot = p11,
+  device = cairo_pdf,
+  width = 5,
+  height = 4,
+  units = "in"
+)
+
+# check size
+bmp10_region %>%
+  filter(MEAN_FST > 0.5) %>%
+  summarise(
+    min_bp = min(BIN_START),
+    max_bp = max(BIN_END),
+    span = max_bp - min_bp
+  )
+
+# check other genes
+fst_out_chr %>%
+  filter(CHROM == "NC_042587.1",
+         BIN_START >= 4300000,
+         BIN_START <= 5000000,
+         genes != ".") %>%
+  dplyr::select(BIN_START, MEAN_FST, genes) %>%
+  arrange(desc(MEAN_FST))
 
 # network
 gl <- vcfR2genlight(vcf)
@@ -384,7 +769,7 @@ shape_vals <- c(21, 22, 23, 24, 25)
 names(shape_vals) <- unique(samples$country)
 
 # ggtree plot
-p7 <- ggtree(nj_tree, layout = "daylight", size = 0.5) %<+% samples +
+p11 <- ggtree(nj_tree, layout = "daylight", size = 0.5) %<+% samples +
   geom_tippoint(aes(fill = species, shape = country),
                 size = 2.5,
                 color = "black",

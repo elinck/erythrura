@@ -1,0 +1,10 @@
+name: admixture
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - admixture
+  - plink2
+  - bcftools
+  - htslib
+  - coreutils

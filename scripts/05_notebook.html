@@ -58,17 +58,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="03_notebook_files/libs/clipboard/clipboard.min.js"></script>
-<script src="03_notebook_files/libs/quarto-html/quarto.js" type="module"></script>
-<script src="03_notebook_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="03_notebook_files/libs/quarto-html/popper.min.js"></script>
-<script src="03_notebook_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="03_notebook_files/libs/quarto-html/anchor.min.js"></script>
-<link href="03_notebook_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="03_notebook_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="03_notebook_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="03_notebook_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="03_notebook_files/libs/bootstrap/bootstrap-bb462d781dde1847d9e3ccf7736099dd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="05_notebook_files/libs/clipboard/clipboard.min.js"></script>
+<script src="05_notebook_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="05_notebook_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="05_notebook_files/libs/quarto-html/popper.min.js"></script>
+<script src="05_notebook_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="05_notebook_files/libs/quarto-html/anchor.min.js"></script>
+<link href="05_notebook_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="05_notebook_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="05_notebook_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="05_notebook_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="05_notebook_files/libs/bootstrap/bootstrap-bb462d781dde1847d9e3ccf7736099dd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -125,14 +125,17 @@ window.Quarto = {
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(maps)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggtree)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggtree)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(clusterProfiler)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(org.Gg.eg.db)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(AnnotationDbi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We begin by loading metadata and plotting sampling localities over Birdlife International’s approximation of the range of the two species:</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="03_notebook_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="05_notebook_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -142,7 +145,7 @@ window.Quarto = {
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="03_notebook_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="05_notebook_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -152,17 +155,38 @@ window.Quarto = {
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="03_notebook_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="05_notebook_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
-<p>Evidence of distinct clusters, with Solomons and PNG <em>trichroa</em> showing no geographic substructure. Another way to visualize this subtle differentiation is with a neighbor-joining tree. Here is one build from Nei’s genetic distance (D), rooted at the midpoint, and ladderized:</p>
+<p>Evidence of distinct clusters, with Solomons and PNG <em>trichroa</em> showing no geographic substructure.</p>
+<p>Next we will look at the results of model-based clustering and ancestry assignment via <code>admixture</code>. I ran 10 replicates of K1-5. Here is a plot of cross-validation error, showing K1 is the best fit, followed by K2:</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="03_notebook_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="05_notebook_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Here are the assignments for K2-4. Note that K2 pulls apart species with some admixture from <em>papuana</em> intro <em>trichroa</em> (but not vice-versa). The other values are geographically insensible:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="05_notebook_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>A last way to visualize subtle differentiation is with a neighbor-joining tree. Here is one built from Nei’s genetic distance (D), rooted at the midpoint, and ladderized:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="05_notebook_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -172,73 +196,191 @@ window.Quarto = {
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="03_notebook_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="05_notebook_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>Not a big difference, surprisingly. It seems like PCA exaggerates the differentiation of the three outlier samples—or perhaps that their influence on allele frequencies and thus <span class="math inline">\(F_{ST}\)</span> is minor.</p>
-<p>Our next question is whether <em>trichroa</em> and <em>erythrura</em> are similar due to recent divergence and shared ancestry, secondary contact and hybridization, or divergence with gene flow. We fit demographic models in <code>dadi2</code>, ran optimization replicates, and estimated parameter uncertainty via bootstrapping. An IM model is a better fit than either SC or SI (“strict isolation”), though note the spread across replicates:</p>
+<p>We now want to know whether these regions correspond with genes related to craniofacial development, and if not, what the outliers actually are. As it turns out, none of them are standard bill size variants (e.g., BMP4; others coded in orange):</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="03_notebook_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="05_notebook_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
-<p>The best run is an IM run by AIC and log-likelihood:</p>
+<p>A gene ontology enrichment analysis using <em>Gallus gallus</em> orthologs finds no special clusters:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>best_aic <span class="ot">&lt;-</span> mod_df[<span class="fu">which.min</span>(mod_df<span class="sc">$</span>AIC),]</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>best_ll <span class="ot">&lt;-</span> mod_df[<span class="fu">which.max</span>(mod_df<span class="sc">$</span>ll_model),]</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>best_aic</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># outlier go </span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>candidate_genes <span class="ot">&lt;-</span> fst_out_chr <span class="sc">%&gt;%</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(MEAN_FST <span class="sc">&gt;=</span> thr, genes <span class="sc">!=</span> <span class="st">"."</span>, <span class="sc">!</span><span class="fu">is.na</span>(genes)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate_rows</span>(genes, <span class="at">sep =</span> <span class="st">","</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">genes =</span> <span class="fu">str_trim</span>(genes)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(genes) <span class="sc">%&gt;%</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(genes)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># filter genes to db</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>all_genes <span class="ot">&lt;-</span> fst_out_chr <span class="sc">%&gt;%</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(genes <span class="sc">!=</span> <span class="st">"."</span>, <span class="sc">!</span><span class="fu">is.na</span>(genes)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate_rows</span>(genes, <span class="at">sep =</span> <span class="st">","</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">genes =</span> <span class="fu">str_trim</span>(genes)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(genes) <span class="sc">%&gt;%</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(genes)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># enrich!</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>ego <span class="ot">&lt;-</span> <span class="fu">enrichGO</span>(</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">gene =</span> candidate_genes,</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">universe =</span> all_genes,</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">OrgDb =</span> org.Gg.eg.db,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">keyType =</span> <span class="st">"SYMBOL"</span>,</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">ont =</span> <span class="st">"BP"</span>,</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">pAdjustMethod =</span> <span class="st">"BH"</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>ego</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 3
-  model   AIC ll_model
-  &lt;chr&gt; &lt;dbl&gt;    &lt;dbl&gt;
-1 IM    4487.   -2238.</code></pre>
+<pre><code>#
+# over-representation test
+#
+#...@organism    Gallus gallus 
+#...@ontology    BP 
+#...@keytype     SYMBOL 
+#...@gene    chr [1:19] "LOC116183839" "LOC110473800" "RBM39" "TRNAE-UUC" "ROMO1" ...
+#...pvalues adjusted by 'BH' with cutoff &lt;0.05 
+#...0 enriched terms found
+#...Citation
+S Xu, E Hu, Y Cai, Z Xie, X Luo, L Zhan, W Tang, Q Wang, B Liu, R Wang, W Xie, T Wu, L Xie, G Yu. Using clusterProfiler to characterize multiomics data. Nature Protocols. 2024, 19(11):3292-3320 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>best_ll</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>BMP10 is possibly the most significant candidate related to morphology:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># grep for families</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>special_genes <span class="ot">&lt;-</span> <span class="fu">grep</span>(<span class="st">"BMP|WNT|FGF|SHH|HOX|DLX|MSX|RUNX"</span>, candidate_genes, <span class="at">value =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>special_hits <span class="ot">&lt;-</span> fst_out_chr <span class="sc">%&gt;%</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(genes), genes <span class="sc">!=</span> <span class="st">"."</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate_rows</span>(genes, <span class="at">sep=</span><span class="st">","</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">genes =</span> <span class="fu">str_trim</span>(genes)) <span class="sc">%&gt;%</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(genes <span class="sc">%in%</span> special_genes)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co"># check chr clustering</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>special_hits <span class="sc">%&gt;%</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="at">gene=</span>genes, CHROM, chr, BIN_START, BIN_END, MEAN_FST) <span class="sc">%&gt;%</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(CHROM, BIN_START)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 6
+  gene  CHROM       chr   BIN_START BIN_END MEAN_FST
+  &lt;chr&gt; &lt;chr&gt;       &lt;fct&gt;     &lt;int&gt;   &lt;int&gt;    &lt;dbl&gt;
+1 BMP10 NC_042587.1 22      4570001 4620000    0.165
+2 BMP10 NC_042587.1 22      4580001 4630000    0.165
+3 BMP10 NC_042587.1 22      4590001 4640000    0.231
+4 BMP10 NC_042587.1 22      4600001 4650000    0.509
+5 BMP10 NC_042587.1 22      4610001 4660000    0.770</code></pre>
+</div>
+</div>
+<p>Let’s look at the peak. It appears to be multiple divergent windows, though this could be a scaling issue:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="05_notebook_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>What <em>are</em> the other outlier genes, then? One could come up with a story…</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>clean_genes <span class="ot">&lt;-</span> candidate_genes[<span class="sc">!</span><span class="fu">grepl</span>(<span class="st">"^LOC|^TRNA"</span>, candidate_genes)]</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>desc <span class="ot">&lt;-</span> AnnotationDbi<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  org.Gg.eg.db,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">keys =</span> clean_genes,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">keytype =</span> <span class="st">"SYMBOL"</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">"SYMBOL"</span>,<span class="st">"GENENAME"</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>desc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     SYMBOL                                                           GENENAME
+1     RBM39                                                               &lt;NA&gt;
+2     ROMO1                                reactive oxygen species modulator 1
+3      ADD2                                                          adducin 2
+4      MXD1                                         MAX dimerization protein 1
+5   SNRNP27                small nuclear ribonucleoprotein U4/U6.U5 subunit 27
+6  ARHGAP25                                   Rho GTPase activating protein 25
+7     BMP10                                      bone morphogenetic protein 10
+8      CDS2 CDP-diacylglycerol synthase (phosphatidate cytidylyltransferase) 2
+9      PCNA                                 proliferating cell nuclear antigen
+10    ACTG2                             actin, gamma 2, smooth muscle, enteric
+11    DGUOK                                              deoxyguanosine kinase
+12     TET3                                   tet methylcytosine dioxygenase 3
+13   SRCIN1                                   SRC kinase signaling inhibitor 1
+14     EPOP                                                               &lt;NA&gt;
+15     IL7R                                             interleukin 7 receptor</code></pre>
+</div>
+</div>
+<p>Our final preliminary question is whether <em>trichroa</em> and <em>erythrura</em> are similar due to recent divergence and shared ancestry, secondary contact and hybridization, or divergence with gene flow. We fit demographic models in <code>dadi2</code>, ran optimization replicates, and estimated parameter uncertainty via bootstrapping. An IM model is a better fit than either SC or SI (“strict isolation”), though note the spread across replicates:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="05_notebook_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The best run is an SC run by AIC and log-likelihood:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>best_aic <span class="ot">&lt;-</span> mod_df[<span class="fu">which.min</span>(mod_df<span class="sc">$</span>AIC),]</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>best_ll <span class="ot">&lt;-</span> mod_df[<span class="fu">which.max</span>(mod_df<span class="sc">$</span>ll_model),]</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>best_aic</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 3
   model   AIC ll_model
   &lt;chr&gt; &lt;dbl&gt;    &lt;dbl&gt;
-1 IM    4487.   -2238.</code></pre>
+1 SC    1537.    -762.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>best_ll</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  model   AIC ll_model
+  &lt;chr&gt; &lt;dbl&gt;    &lt;dbl&gt;
+1 SC    1537.    -762.</code></pre>
 </div>
 </div>
 <p>Here are the parameter estimates for that run:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>params <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="st">"/home/k14m234/erythrura/scripts/dadi/im_ci.tsv"</span>, <span class="at">col_names =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(params) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"rep"</span>, <span class="st">"ll_model"</span>, <span class="st">"name"</span>, <span class="st">"est"</span>, <span class="st">"se_i"</span>, <span class="st">"lo"</span>, <span class="st">"hi"</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>best_rep <span class="ot">&lt;-</span> params[<span class="fu">which.max</span>(params<span class="sc">$</span>ll_model),]<span class="sc">$</span>rep</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>best_params <span class="ot">&lt;-</span> params <span class="sc">%&gt;%</span> <span class="fu">filter</span>(rep<span class="sc">==</span>best_rep)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>best_params</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>params <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="st">"/home/k14m234/erythrura/scripts/dadi/sc_ci.tsv"</span>, <span class="at">col_names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(params) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"rep"</span>, <span class="st">"ll_model"</span>, <span class="st">"name"</span>, <span class="st">"est"</span>, <span class="st">"se_i"</span>, <span class="st">"lo"</span>, <span class="st">"hi"</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>best_rep <span class="ot">&lt;-</span> params[<span class="fu">which.max</span>(params<span class="sc">$</span>ll_model),]<span class="sc">$</span>rep</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>best_params <span class="ot">&lt;-</span> params <span class="sc">%&gt;%</span> <span class="fu">filter</span>(rep<span class="sc">==</span>best_rep)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>best_params</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 5 × 7
-    rep ll_model name     est          se_i     lo     hi
-  &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt;         &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
-1    47   -2238. nu1   5.04   0.00000272    5.04   5.04  
-2    47   -2238. nu2   2.26   0.00000112    2.26   2.26  
-3    47   -2238. T     0.0622 0.00000000888 0.0622 0.0622
-4    47   -2238. m12   0.113  0.00000000793 0.113  0.113 
-5    47   -2238. m21   0.0570 0.00000721    0.0570 0.0571</code></pre>
+<pre><code># A tibble: 6 × 7
+  rep   ll_model           name  est                 se_i            lo    hi   
+  &lt;chr&gt; &lt;chr&gt;              &lt;chr&gt; &lt;chr&gt;               &lt;chr&gt;           &lt;chr&gt; &lt;chr&gt;
+1 8     -761.5987507750375 nu1   1.1689624911833516  5.459557774274… 1.16… 1.16…
+2 8     -761.5987507750375 nu2   1.1254787432318751  2.214667587799… 1.12… 1.12…
+3 8     -761.5987507750375 T1    0.20887261531882914 2.817877586312… 0.20… 0.20…
+4 8     -761.5987507750375 T2    1.1838391971968723  5.020025648577… 1.18… 1.18…
+5 8     -761.5987507750375 m12   0.04428878095505888 5.043343917950… 0.04… 0.04…
+6 8     -761.5987507750375 m21   0.03366046106153659 1.070161612278… 0.03… 0.03…</code></pre>
 </div>
 </div>
 <p>We can convert these to “real units” with an estimated mutation rate, sequence coverage, and generation time:</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 5 × 6
-  name  real_unit             real_est     real_low    real_high real_est_years
-  &lt;chr&gt; &lt;chr&gt;                    &lt;dbl&gt;        &lt;dbl&gt;        &lt;dbl&gt;          &lt;dbl&gt;
-1 nu1   individuals       7722.        7722.        7722.                   NA 
-2 nu2   individuals       3454.        3454.        3454.                   NA 
-3 T     generations/years  190.         190.         190.                  190.
-4 m12   per_generation       0.0000367    0.0000367    0.0000367            NA 
-5 m21   per_generation       0.0000186    0.0000186    0.0000186            NA </code></pre>
+<pre><code># A tibble: 6 × 6
+  name  real_unit              real_est      real_low   real_high real_est_years
+  &lt;chr&gt; &lt;chr&gt;                     &lt;dbl&gt;         &lt;dbl&gt;       &lt;dbl&gt;          &lt;dbl&gt;
+1 nu1   individuals       2294.         2294.             2.29e+3            NA 
+2 nu2   individuals       2208.         2208.             2.21e+3            NA 
+3 T1    generations/years  820.          820.             8.20e+2           820.
+4 T2    generations/years 4645.         4645.             4.65e+3          4645.
+5 m12   per_generation       0.0000113     0.0000113      1.13e-5            NA 
+6 m21   per_generation       0.00000858    0.00000858     8.58e-6            NA </code></pre>
 </div>
 </div>
-<p>Not particularly realistic! Will need to keep optimizing.</p>
+<p>Not particularly realistic! Or these things are real young. Will need to keep optimizing.</p>
 </section>
 
 </main>

@@ -1,0 +1,1470 @@
+Using workflow specific profile /home/k14m234/erythrura/workflow-profiles/ for setting default command line arguments.
+host: epyc017
+Building DAG of jobs...
+You are running snakemake in a SLURM job context. This is not recommended, as it may lead to unexpected behavior. If possible, please run Snakemake directly on the login node.
+SLURM run ID: 663c14a6-7b69-4270-bc70-42ea517a93a2
+MinJobAge 300s (>= 120s). 'squeue' should work reliably for status queries.
+Using shell: /usr/bin/bash
+Provided remote nodes: 50
+Job stats:
+job                   count
+------------------  -------
+admixture                 1
+admixture_friendly        1
+drop_outliers             1
+make_numeric_chr          1
+run_admixture            50
+vcf_to_plink              1
+total                    55
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Thu Feb 19 09:56:46 2026]
+rule vcf_to_plink:
+    input: /home/k14m234/erythrura_assembly/results/GCF_005870125.1/QC/erythrura.pruned.vcf.gz
+    output: results/admixture/erythrura.bed, results/admixture/erythrura.bim, results/admixture/erythrura.fam
+    jobid: 5
+    reason: Missing output files: results/admixture/erythrura.fam, results/admixture/erythrura.bed, results/admixture/erythrura.bim
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        mkdir -p results/admixture
+        plink2 --vcf /home/k14m234/erythrura_assembly/results/GCF_005870125.1/QC/erythrura.pruned.vcf.gz \
+               --double-id \
+               --allow-extra-chr \
+               --make-bed \
+               --out results/admixture/erythrura
+        
+Job 5 has been submitted with SLURM jobid 3587373 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_vcf_to_plink/3587373.log).
+[Thu Feb 19 09:57:21 2026]
+Finished jobid: 5 (Rule: vcf_to_plink)
+1 of 55 steps (2%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Thu Feb 19 09:57:21 2026]
+rule make_numeric_chr:
+    input: results/admixture/erythrura.bed, results/admixture/erythrura.bim, results/admixture/erythrura.fam
+    output: results/admixture/erythrura.numchr.bed, results/admixture/erythrura.numchr.bim, results/admixture/erythrura.numchr.fam
+    jobid: 4
+    reason: Missing output files: results/admixture/erythrura.numchr.bim, results/admixture/erythrura.numchr.bed, results/admixture/erythrura.numchr.fam; Input files updated by another job: results/admixture/erythrura.fam, results/admixture/erythrura.bed, results/admixture/erythrura.bim; Code has changed since last execution
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        cp -f results/admixture/erythrura.bed results/admixture/erythrura.numchr.bed
+        cp -f results/admixture/erythrura.fam results/admixture/erythrura.numchr.fam
+        awk 'BEGIN{OFS="\t"} {$1=1; print}' results/admixture/erythrura.bim > results/admixture/erythrura.numchr.bim
+        
+Job 4 has been submitted with SLURM jobid 3587374 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_make_numeric_chr/3587374.log).
+[Thu Feb 19 09:58:01 2026]
+Finished jobid: 4 (Rule: make_numeric_chr)
+2 of 55 steps (4%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Thu Feb 19 09:58:01 2026]
+rule drop_outliers:
+    input: results/admixture/erythrura.numchr.bed, results/admixture/erythrura.numchr.bim, results/admixture/erythrura.numchr.fam, config/admixture_outliers.txt
+    output: results/admixture/erythrura.no_outliers.bed, results/admixture/erythrura.no_outliers.bim, results/admixture/erythrura.no_outliers.fam
+    jobid: 3
+    reason: Missing output files: results/admixture/erythrura.no_outliers.bim, results/admixture/erythrura.no_outliers.bed, results/admixture/erythrura.no_outliers.fam; Input files updated by another job: results/admixture/erythrura.numchr.bim, results/admixture/erythrura.numchr.fam, results/admixture/erythrura.numchr.bed
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        plink2 --bfile results/admixture/erythrura.numchr \
+               --remove config/admixture_outliers.txt \
+               --make-bed \
+               --out results/admixture/erythrura.no_outliers
+        
+Job 3 has been submitted with SLURM jobid 3587376 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_drop_outliers/3587376.log).
+[Thu Feb 19 09:58:41 2026]
+Finished jobid: 3 (Rule: drop_outliers)
+3 of 55 steps (5%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Thu Feb 19 09:58:41 2026]
+rule admixture_friendly:
+    input: results/admixture/erythrura.no_outliers.bed, results/admixture/erythrura.no_outliers.bim, results/admixture/erythrura.no_outliers.fam
+    output: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    jobid: 2
+    reason: Missing output files: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed; Input files updated by another job: results/admixture/erythrura.no_outliers.bim, results/admixture/erythrura.no_outliers.bed, results/admixture/erythrura.no_outliers.fam
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        plink2 --bfile results/admixture/erythrura.no_outliers \
+               --max-alleles 2 \
+               --snps-only just-acgt \
+               --geno 0.1 \
+               --maf 0.05 \
+               --make-bed \
+               --out results/admixture/erythrura.admix
+        
+Job 2 has been submitted with SLURM jobid 3587377 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_admixture_friendly/3587377.log).
+[Thu Feb 19 09:59:21 2026]
+Finished jobid: 2 (Rule: admixture_friendly)
+4 of 55 steps (7%) done
+Select jobs to execute...
+Execute 50 jobs...
+
+[Thu Feb 19 09:59:21 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K4/rep1/run.log, results/admixture/runs/K4/rep1/erythrura.4.Q, results/admixture/runs/K4/rep1/erythrura.4.P
+    jobid: 35
+    reason: Missing output files: results/admixture/runs/K4/rep1/run.log, results/admixture/runs/K4/rep1/erythrura.4.Q, results/admixture/runs/K4/rep1/erythrura.4.P; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=4, rep=1
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K4/rep1
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=5001 --cv erythrura.bed 4 \
+          2>&1 | tee run.log
+        
+Job 35 has been submitted with SLURM jobid 3587378 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/4_1/3587378.log).
+
+[Thu Feb 19 09:59:21 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K1/rep9/run.log, results/admixture/runs/K1/rep9/erythrura.1.Q, results/admixture/runs/K1/rep9/erythrura.1.P
+    jobid: 13
+    reason: Missing output files: results/admixture/runs/K1/rep9/erythrura.1.Q, results/admixture/runs/K1/rep9/run.log, results/admixture/runs/K1/rep9/erythrura.1.P; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=1, rep=9
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K1/rep9
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=2009 --cv erythrura.bed 1 \
+          2>&1 | tee run.log
+        
+Job 13 has been submitted with SLURM jobid 3587379 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/1_9/3587379.log).
+
+[Thu Feb 19 09:59:21 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K5/rep6/run.log, results/admixture/runs/K5/rep6/erythrura.5.Q, results/admixture/runs/K5/rep6/erythrura.5.P
+    jobid: 50
+    reason: Missing output files: results/admixture/runs/K5/rep6/erythrura.5.P, results/admixture/runs/K5/rep6/erythrura.5.Q, results/admixture/runs/K5/rep6/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=5, rep=6
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K5/rep6
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=6006 --cv erythrura.bed 5 \
+          2>&1 | tee run.log
+        
+Job 50 has been submitted with SLURM jobid 3587380 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/5_6/3587380.log).
+
+[Thu Feb 19 09:59:22 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K4/rep9/run.log, results/admixture/runs/K4/rep9/erythrura.4.Q, results/admixture/runs/K4/rep9/erythrura.4.P
+    jobid: 43
+    reason: Missing output files: results/admixture/runs/K4/rep9/run.log, results/admixture/runs/K4/rep9/erythrura.4.P, results/admixture/runs/K4/rep9/erythrura.4.Q; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=4, rep=9
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K4/rep9
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=5009 --cv erythrura.bed 4 \
+          2>&1 | tee run.log
+        
+Job 43 has been submitted with SLURM jobid 3587381 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/4_9/3587381.log).
+
+[Thu Feb 19 09:59:22 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K3/rep4/run.log, results/admixture/runs/K3/rep4/erythrura.3.Q, results/admixture/runs/K3/rep4/erythrura.3.P
+    jobid: 28
+    reason: Missing output files: results/admixture/runs/K3/rep4/run.log, results/admixture/runs/K3/rep4/erythrura.3.Q, results/admixture/runs/K3/rep4/erythrura.3.P; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=3, rep=4
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K3/rep4
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=4004 --cv erythrura.bed 3 \
+          2>&1 | tee run.log
+        
+Job 28 has been submitted with SLURM jobid 3587382 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/3_4/3587382.log).
+
+[Thu Feb 19 09:59:22 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K1/rep2/run.log, results/admixture/runs/K1/rep2/erythrura.1.Q, results/admixture/runs/K1/rep2/erythrura.1.P
+    jobid: 6
+    reason: Missing output files: results/admixture/runs/K1/rep2/erythrura.1.P, results/admixture/runs/K1/rep2/run.log, results/admixture/runs/K1/rep2/erythrura.1.Q; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=1, rep=2
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K1/rep2
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=2002 --cv erythrura.bed 1 \
+          2>&1 | tee run.log
+        
+Job 6 has been submitted with SLURM jobid 3587383 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/1_2/3587383.log).
+
+[Thu Feb 19 09:59:22 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K2/rep5/run.log, results/admixture/runs/K2/rep5/erythrura.2.Q, results/admixture/runs/K2/rep5/erythrura.2.P
+    jobid: 19
+    reason: Missing output files: results/admixture/runs/K2/rep5/erythrura.2.Q, results/admixture/runs/K2/rep5/erythrura.2.P, results/admixture/runs/K2/rep5/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=2, rep=5
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K2/rep5
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=3005 --cv erythrura.bed 2 \
+          2>&1 | tee run.log
+        
+Job 19 has been submitted with SLURM jobid 3587384 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/2_5/3587384.log).
+
+[Thu Feb 19 09:59:22 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K4/rep2/run.log, results/admixture/runs/K4/rep2/erythrura.4.Q, results/admixture/runs/K4/rep2/erythrura.4.P
+    jobid: 36
+    reason: Missing output files: results/admixture/runs/K4/rep2/erythrura.4.Q, results/admixture/runs/K4/rep2/erythrura.4.P, results/admixture/runs/K4/rep2/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=4, rep=2
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K4/rep2
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=5002 --cv erythrura.bed 4 \
+          2>&1 | tee run.log
+        
+Job 36 has been submitted with SLURM jobid 3587385 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/4_2/3587385.log).
+
+[Thu Feb 19 09:59:22 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K2/rep8/run.log, results/admixture/runs/K2/rep8/erythrura.2.Q, results/admixture/runs/K2/rep8/erythrura.2.P
+    jobid: 22
+    reason: Missing output files: results/admixture/runs/K2/rep8/erythrura.2.Q, results/admixture/runs/K2/rep8/run.log, results/admixture/runs/K2/rep8/erythrura.2.P; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=2, rep=8
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K2/rep8
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=3008 --cv erythrura.bed 2 \
+          2>&1 | tee run.log
+        
+Job 22 has been submitted with SLURM jobid 3587386 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/2_8/3587386.log).
+
+[Thu Feb 19 09:59:22 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K1/rep10/run.log, results/admixture/runs/K1/rep10/erythrura.1.Q, results/admixture/runs/K1/rep10/erythrura.1.P
+    jobid: 14
+    reason: Missing output files: results/admixture/runs/K1/rep10/run.log, results/admixture/runs/K1/rep10/erythrura.1.Q, results/admixture/runs/K1/rep10/erythrura.1.P; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=1, rep=10
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K1/rep10
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=2010 --cv erythrura.bed 1 \
+          2>&1 | tee run.log
+        
+Job 14 has been submitted with SLURM jobid 3587387 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/1_10/3587387.log).
+
+[Thu Feb 19 09:59:22 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K5/rep7/run.log, results/admixture/runs/K5/rep7/erythrura.5.Q, results/admixture/runs/K5/rep7/erythrura.5.P
+    jobid: 51
+    reason: Missing output files: results/admixture/runs/K5/rep7/erythrura.5.Q, results/admixture/runs/K5/rep7/erythrura.5.P, results/admixture/runs/K5/rep7/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=5, rep=7
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K5/rep7
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=6007 --cv erythrura.bed 5 \
+          2>&1 | tee run.log
+        
+Job 51 has been submitted with SLURM jobid 3587388 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/5_7/3587388.log).
+
+[Thu Feb 19 09:59:22 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K4/rep10/run.log, results/admixture/runs/K4/rep10/erythrura.4.Q, results/admixture/runs/K4/rep10/erythrura.4.P
+    jobid: 44
+    reason: Missing output files: results/admixture/runs/K4/rep10/erythrura.4.P, results/admixture/runs/K4/rep10/erythrura.4.Q, results/admixture/runs/K4/rep10/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=4, rep=10
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K4/rep10
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=5010 --cv erythrura.bed 4 \
+          2>&1 | tee run.log
+        
+Job 44 has been submitted with SLURM jobid 3587389 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/4_10/3587389.log).
+
+[Thu Feb 19 09:59:22 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K3/rep5/run.log, results/admixture/runs/K3/rep5/erythrura.3.Q, results/admixture/runs/K3/rep5/erythrura.3.P
+    jobid: 29
+    reason: Missing output files: results/admixture/runs/K3/rep5/erythrura.3.Q, results/admixture/runs/K3/rep5/erythrura.3.P, results/admixture/runs/K3/rep5/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=3, rep=5
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K3/rep5
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=4005 --cv erythrura.bed 3 \
+          2>&1 | tee run.log
+        
+Job 29 has been submitted with SLURM jobid 3587390 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/3_5/3587390.log).
+
+[Thu Feb 19 09:59:23 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K4/rep3/run.log, results/admixture/runs/K4/rep3/erythrura.4.Q, results/admixture/runs/K4/rep3/erythrura.4.P
+    jobid: 37
+    reason: Missing output files: results/admixture/runs/K4/rep3/erythrura.4.P, results/admixture/runs/K4/rep3/run.log, results/admixture/runs/K4/rep3/erythrura.4.Q; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=4, rep=3
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K4/rep3
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=5003 --cv erythrura.bed 4 \
+          2>&1 | tee run.log
+        
+Job 37 has been submitted with SLURM jobid 3587391 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/4_3/3587391.log).
+
+[Thu Feb 19 09:59:23 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K2/rep7/run.log, results/admixture/runs/K2/rep7/erythrura.2.Q, results/admixture/runs/K2/rep7/erythrura.2.P
+    jobid: 21
+    reason: Missing output files: results/admixture/runs/K2/rep7/erythrura.2.P, results/admixture/runs/K2/rep7/erythrura.2.Q, results/admixture/runs/K2/rep7/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=2, rep=7
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K2/rep7
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=3007 --cv erythrura.bed 2 \
+          2>&1 | tee run.log
+        
+Job 21 has been submitted with SLURM jobid 3587392 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/2_7/3587392.log).
+
+[Thu Feb 19 09:59:23 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K1/rep8/run.log, results/admixture/runs/K1/rep8/erythrura.1.Q, results/admixture/runs/K1/rep8/erythrura.1.P
+    jobid: 12
+    reason: Missing output files: results/admixture/runs/K1/rep8/erythrura.1.Q, results/admixture/runs/K1/rep8/run.log, results/admixture/runs/K1/rep8/erythrura.1.P; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=1, rep=8
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K1/rep8
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=2008 --cv erythrura.bed 1 \
+          2>&1 | tee run.log
+        
+Job 12 has been submitted with SLURM jobid 3587393 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/1_8/3587393.log).
+
+[Thu Feb 19 09:59:23 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K5/rep8/run.log, results/admixture/runs/K5/rep8/erythrura.5.Q, results/admixture/runs/K5/rep8/erythrura.5.P
+    jobid: 52
+    reason: Missing output files: results/admixture/runs/K5/rep8/erythrura.5.Q, results/admixture/runs/K5/rep8/erythrura.5.P, results/admixture/runs/K5/rep8/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=5, rep=8
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K5/rep8
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=6008 --cv erythrura.bed 5 \
+          2>&1 | tee run.log
+        
+Job 52 has been submitted with SLURM jobid 3587394 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/5_8/3587394.log).
+
+[Thu Feb 19 09:59:23 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K5/rep1/run.log, results/admixture/runs/K5/rep1/erythrura.5.Q, results/admixture/runs/K5/rep1/erythrura.5.P
+    jobid: 45
+    reason: Missing output files: results/admixture/runs/K5/rep1/run.log, results/admixture/runs/K5/rep1/erythrura.5.P, results/admixture/runs/K5/rep1/erythrura.5.Q; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=5, rep=1
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K5/rep1
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=6001 --cv erythrura.bed 5 \
+          2>&1 | tee run.log
+        
+Job 45 has been submitted with SLURM jobid 3587395 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/5_1/3587395.log).
+
+[Thu Feb 19 09:59:23 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K3/rep6/run.log, results/admixture/runs/K3/rep6/erythrura.3.Q, results/admixture/runs/K3/rep6/erythrura.3.P
+    jobid: 30
+    reason: Missing output files: results/admixture/runs/K3/rep6/erythrura.3.P, results/admixture/runs/K3/rep6/erythrura.3.Q, results/admixture/runs/K3/rep6/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=3, rep=6
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K3/rep6
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=4006 --cv erythrura.bed 3 \
+          2>&1 | tee run.log
+        
+Job 30 has been submitted with SLURM jobid 3587396 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/3_6/3587396.log).
+
+[Thu Feb 19 09:59:23 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K4/rep4/run.log, results/admixture/runs/K4/rep4/erythrura.4.Q, results/admixture/runs/K4/rep4/erythrura.4.P
+    jobid: 38
+    reason: Missing output files: results/admixture/runs/K4/rep4/erythrura.4.Q, results/admixture/runs/K4/rep4/erythrura.4.P, results/admixture/runs/K4/rep4/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=4, rep=4
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K4/rep4
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=5004 --cv erythrura.bed 4 \
+          2>&1 | tee run.log
+        
+Job 38 has been submitted with SLURM jobid 3587397 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/4_4/3587397.log).
+
+[Thu Feb 19 09:59:23 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K2/rep9/run.log, results/admixture/runs/K2/rep9/erythrura.2.Q, results/admixture/runs/K2/rep9/erythrura.2.P
+    jobid: 23
+    reason: Missing output files: results/admixture/runs/K2/rep9/erythrura.2.Q, results/admixture/runs/K2/rep9/erythrura.2.P, results/admixture/runs/K2/rep9/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=2, rep=9
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K2/rep9
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=3009 --cv erythrura.bed 2 \
+          2>&1 | tee run.log
+        
+Job 23 has been submitted with SLURM jobid 3587398 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/2_9/3587398.log).
+
+[Thu Feb 19 09:59:23 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K1/rep7/run.log, results/admixture/runs/K1/rep7/erythrura.1.Q, results/admixture/runs/K1/rep7/erythrura.1.P
+    jobid: 11
+    reason: Missing output files: results/admixture/runs/K1/rep7/run.log, results/admixture/runs/K1/rep7/erythrura.1.Q, results/admixture/runs/K1/rep7/erythrura.1.P; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=1, rep=7
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K1/rep7
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=2007 --cv erythrura.bed 1 \
+          2>&1 | tee run.log
+        
+Job 11 has been submitted with SLURM jobid 3587399 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/1_7/3587399.log).
+
+[Thu Feb 19 09:59:23 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K5/rep9/run.log, results/admixture/runs/K5/rep9/erythrura.5.Q, results/admixture/runs/K5/rep9/erythrura.5.P
+    jobid: 53
+    reason: Missing output files: results/admixture/runs/K5/rep9/erythrura.5.P, results/admixture/runs/K5/rep9/run.log, results/admixture/runs/K5/rep9/erythrura.5.Q; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=5, rep=9
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K5/rep9
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=6009 --cv erythrura.bed 5 \
+          2>&1 | tee run.log
+        
+Job 53 has been submitted with SLURM jobid 3587400 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/5_9/3587400.log).
+
+[Thu Feb 19 09:59:24 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K5/rep2/run.log, results/admixture/runs/K5/rep2/erythrura.5.Q, results/admixture/runs/K5/rep2/erythrura.5.P
+    jobid: 46
+    reason: Missing output files: results/admixture/runs/K5/rep2/erythrura.5.Q, results/admixture/runs/K5/rep2/run.log, results/admixture/runs/K5/rep2/erythrura.5.P; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=5, rep=2
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K5/rep2
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=6002 --cv erythrura.bed 5 \
+          2>&1 | tee run.log
+        
+Job 46 has been submitted with SLURM jobid 3587401 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/5_2/3587401.log).
+
+[Thu Feb 19 09:59:24 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K3/rep7/run.log, results/admixture/runs/K3/rep7/erythrura.3.Q, results/admixture/runs/K3/rep7/erythrura.3.P
+    jobid: 31
+    reason: Missing output files: results/admixture/runs/K3/rep7/run.log, results/admixture/runs/K3/rep7/erythrura.3.P, results/admixture/runs/K3/rep7/erythrura.3.Q; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=3, rep=7
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K3/rep7
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=4007 --cv erythrura.bed 3 \
+          2>&1 | tee run.log
+        
+Job 31 has been submitted with SLURM jobid 3587402 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/3_7/3587402.log).
+
+[Thu Feb 19 09:59:24 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K1/rep1/run.log, results/admixture/runs/K1/rep1/erythrura.1.Q, results/admixture/runs/K1/rep1/erythrura.1.P
+    jobid: 1
+    reason: Missing output files: results/admixture/runs/K1/rep1/erythrura.1.P, results/admixture/runs/K1/rep1/run.log, results/admixture/runs/K1/rep1/erythrura.1.Q; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=1, rep=1
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K1/rep1
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=2001 --cv erythrura.bed 1 \
+          2>&1 | tee run.log
+        
+Job 1 has been submitted with SLURM jobid 3587403 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/1_1/3587403.log).
+
+[Thu Feb 19 09:59:24 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K2/rep4/run.log, results/admixture/runs/K2/rep4/erythrura.2.Q, results/admixture/runs/K2/rep4/erythrura.2.P
+    jobid: 18
+    reason: Missing output files: results/admixture/runs/K2/rep4/erythrura.2.Q, results/admixture/runs/K2/rep4/erythrura.2.P, results/admixture/runs/K2/rep4/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=2, rep=4
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K2/rep4
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=3004 --cv erythrura.bed 2 \
+          2>&1 | tee run.log
+        
+Job 18 has been submitted with SLURM jobid 3587404 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/2_4/3587404.log).
+
+[Thu Feb 19 09:59:24 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K4/rep5/run.log, results/admixture/runs/K4/rep5/erythrura.4.Q, results/admixture/runs/K4/rep5/erythrura.4.P
+    jobid: 39
+    reason: Missing output files: results/admixture/runs/K4/rep5/erythrura.4.P, results/admixture/runs/K4/rep5/run.log, results/admixture/runs/K4/rep5/erythrura.4.Q; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=4, rep=5
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K4/rep5
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=5005 --cv erythrura.bed 4 \
+          2>&1 | tee run.log
+        
+Job 39 has been submitted with SLURM jobid 3587405 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/4_5/3587405.log).
+
+[Thu Feb 19 09:59:24 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K2/rep10/run.log, results/admixture/runs/K2/rep10/erythrura.2.Q, results/admixture/runs/K2/rep10/erythrura.2.P
+    jobid: 24
+    reason: Missing output files: results/admixture/runs/K2/rep10/erythrura.2.Q, results/admixture/runs/K2/rep10/run.log, results/admixture/runs/K2/rep10/erythrura.2.P; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=2, rep=10
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K2/rep10
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=3010 --cv erythrura.bed 2 \
+          2>&1 | tee run.log
+        
+Job 24 has been submitted with SLURM jobid 3587406 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/2_10/3587406.log).
+
+[Thu Feb 19 09:59:24 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K1/rep6/run.log, results/admixture/runs/K1/rep6/erythrura.1.Q, results/admixture/runs/K1/rep6/erythrura.1.P
+    jobid: 10
+    reason: Missing output files: results/admixture/runs/K1/rep6/run.log, results/admixture/runs/K1/rep6/erythrura.1.P, results/admixture/runs/K1/rep6/erythrura.1.Q; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=1, rep=6
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K1/rep6
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=2006 --cv erythrura.bed 1 \
+          2>&1 | tee run.log
+        
+Job 10 has been submitted with SLURM jobid 3587407 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/1_6/3587407.log).
+
+[Thu Feb 19 09:59:25 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K5/rep10/run.log, results/admixture/runs/K5/rep10/erythrura.5.Q, results/admixture/runs/K5/rep10/erythrura.5.P
+    jobid: 54
+    reason: Missing output files: results/admixture/runs/K5/rep10/erythrura.5.Q, results/admixture/runs/K5/rep10/erythrura.5.P, results/admixture/runs/K5/rep10/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=5, rep=10
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K5/rep10
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=6010 --cv erythrura.bed 5 \
+          2>&1 | tee run.log
+        
+Job 54 has been submitted with SLURM jobid 3587408 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/5_10/3587408.log).
+
+[Thu Feb 19 09:59:25 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K5/rep3/run.log, results/admixture/runs/K5/rep3/erythrura.5.Q, results/admixture/runs/K5/rep3/erythrura.5.P
+    jobid: 47
+    reason: Missing output files: results/admixture/runs/K5/rep3/erythrura.5.Q, results/admixture/runs/K5/rep3/erythrura.5.P, results/admixture/runs/K5/rep3/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=5, rep=3
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K5/rep3
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=6003 --cv erythrura.bed 5 \
+          2>&1 | tee run.log
+        
+Job 47 has been submitted with SLURM jobid 3587409 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/5_3/3587409.log).
+
+[Thu Feb 19 09:59:25 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K3/rep8/run.log, results/admixture/runs/K3/rep8/erythrura.3.Q, results/admixture/runs/K3/rep8/erythrura.3.P
+    jobid: 32
+    reason: Missing output files: results/admixture/runs/K3/rep8/erythrura.3.P, results/admixture/runs/K3/rep8/erythrura.3.Q, results/admixture/runs/K3/rep8/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=3, rep=8
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K3/rep8
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=4008 --cv erythrura.bed 3 \
+          2>&1 | tee run.log
+        
+Job 32 has been submitted with SLURM jobid 3587410 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/3_8/3587410.log).
+
+[Thu Feb 19 09:59:25 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K2/rep3/run.log, results/admixture/runs/K2/rep3/erythrura.2.Q, results/admixture/runs/K2/rep3/erythrura.2.P
+    jobid: 17
+    reason: Missing output files: results/admixture/runs/K2/rep3/run.log, results/admixture/runs/K2/rep3/erythrura.2.P, results/admixture/runs/K2/rep3/erythrura.2.Q; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=2, rep=3
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K2/rep3
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=3003 --cv erythrura.bed 2 \
+          2>&1 | tee run.log
+        
+Job 17 has been submitted with SLURM jobid 3587411 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/2_3/3587411.log).
+
+[Thu Feb 19 09:59:25 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K4/rep6/run.log, results/admixture/runs/K4/rep6/erythrura.4.Q, results/admixture/runs/K4/rep6/erythrura.4.P
+    jobid: 40
+    reason: Missing output files: results/admixture/runs/K4/rep6/run.log, results/admixture/runs/K4/rep6/erythrura.4.Q, results/admixture/runs/K4/rep6/erythrura.4.P; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=4, rep=6
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K4/rep6
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=5006 --cv erythrura.bed 4 \
+          2>&1 | tee run.log
+        
+Job 40 has been submitted with SLURM jobid 3587412 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/4_6/3587412.log).
+
+[Thu Feb 19 09:59:25 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K3/rep1/run.log, results/admixture/runs/K3/rep1/erythrura.3.Q, results/admixture/runs/K3/rep1/erythrura.3.P
+    jobid: 25
+    reason: Missing output files: results/admixture/runs/K3/rep1/erythrura.3.Q, results/admixture/runs/K3/rep1/run.log, results/admixture/runs/K3/rep1/erythrura.3.P; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=3, rep=1
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K3/rep1
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=4001 --cv erythrura.bed 3 \
+          2>&1 | tee run.log
+        
+Job 25 has been submitted with SLURM jobid 3587413 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/3_1/3587413.log).
+
+[Thu Feb 19 09:59:25 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K1/rep5/run.log, results/admixture/runs/K1/rep5/erythrura.1.Q, results/admixture/runs/K1/rep5/erythrura.1.P
+    jobid: 9
+    reason: Missing output files: results/admixture/runs/K1/rep5/erythrura.1.Q, results/admixture/runs/K1/rep5/erythrura.1.P, results/admixture/runs/K1/rep5/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=1, rep=5
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K1/rep5
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=2005 --cv erythrura.bed 1 \
+          2>&1 | tee run.log
+        
+Job 9 has been submitted with SLURM jobid 3587414 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/1_5/3587414.log).
+
+[Thu Feb 19 09:59:25 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K5/rep4/run.log, results/admixture/runs/K5/rep4/erythrura.5.Q, results/admixture/runs/K5/rep4/erythrura.5.P
+    jobid: 48
+    reason: Missing output files: results/admixture/runs/K5/rep4/run.log, results/admixture/runs/K5/rep4/erythrura.5.Q, results/admixture/runs/K5/rep4/erythrura.5.P; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=5, rep=4
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K5/rep4
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=6004 --cv erythrura.bed 5 \
+          2>&1 | tee run.log
+        
+Job 48 has been submitted with SLURM jobid 3587415 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/5_4/3587415.log).
+
+[Thu Feb 19 09:59:26 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K3/rep9/run.log, results/admixture/runs/K3/rep9/erythrura.3.Q, results/admixture/runs/K3/rep9/erythrura.3.P
+    jobid: 33
+    reason: Missing output files: results/admixture/runs/K3/rep9/erythrura.3.P, results/admixture/runs/K3/rep9/erythrura.3.Q, results/admixture/runs/K3/rep9/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=3, rep=9
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K3/rep9
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=4009 --cv erythrura.bed 3 \
+          2>&1 | tee run.log
+        
+Job 33 has been submitted with SLURM jobid 3587416 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/3_9/3587416.log).
+
+[Thu Feb 19 09:59:26 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K2/rep2/run.log, results/admixture/runs/K2/rep2/erythrura.2.Q, results/admixture/runs/K2/rep2/erythrura.2.P
+    jobid: 16
+    reason: Missing output files: results/admixture/runs/K2/rep2/erythrura.2.Q, results/admixture/runs/K2/rep2/erythrura.2.P, results/admixture/runs/K2/rep2/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=2, rep=2
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K2/rep2
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=3002 --cv erythrura.bed 2 \
+          2>&1 | tee run.log
+        
+Job 16 has been submitted with SLURM jobid 3587417 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/2_2/3587417.log).
+
+[Thu Feb 19 09:59:26 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K4/rep7/run.log, results/admixture/runs/K4/rep7/erythrura.4.Q, results/admixture/runs/K4/rep7/erythrura.4.P
+    jobid: 41
+    reason: Missing output files: results/admixture/runs/K4/rep7/erythrura.4.P, results/admixture/runs/K4/rep7/run.log, results/admixture/runs/K4/rep7/erythrura.4.Q; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=4, rep=7
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K4/rep7
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=5007 --cv erythrura.bed 4 \
+          2>&1 | tee run.log
+        
+Job 41 has been submitted with SLURM jobid 3587418 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/4_7/3587418.log).
+
+[Thu Feb 19 09:59:26 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K3/rep2/run.log, results/admixture/runs/K3/rep2/erythrura.3.Q, results/admixture/runs/K3/rep2/erythrura.3.P
+    jobid: 26
+    reason: Missing output files: results/admixture/runs/K3/rep2/erythrura.3.Q, results/admixture/runs/K3/rep2/erythrura.3.P, results/admixture/runs/K3/rep2/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=3, rep=2
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K3/rep2
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=4002 --cv erythrura.bed 3 \
+          2>&1 | tee run.log
+        
+Job 26 has been submitted with SLURM jobid 3587419 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/3_2/3587419.log).
+
+[Thu Feb 19 09:59:26 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K1/rep4/run.log, results/admixture/runs/K1/rep4/erythrura.1.Q, results/admixture/runs/K1/rep4/erythrura.1.P
+    jobid: 8
+    reason: Missing output files: results/admixture/runs/K1/rep4/erythrura.1.Q, results/admixture/runs/K1/rep4/run.log, results/admixture/runs/K1/rep4/erythrura.1.P; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=1, rep=4
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K1/rep4
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=2004 --cv erythrura.bed 1 \
+          2>&1 | tee run.log
+        
+Job 8 has been submitted with SLURM jobid 3587420 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/1_4/3587420.log).
+
+[Thu Feb 19 09:59:26 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K5/rep5/run.log, results/admixture/runs/K5/rep5/erythrura.5.Q, results/admixture/runs/K5/rep5/erythrura.5.P
+    jobid: 49
+    reason: Missing output files: results/admixture/runs/K5/rep5/erythrura.5.Q, results/admixture/runs/K5/rep5/run.log, results/admixture/runs/K5/rep5/erythrura.5.P; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=5, rep=5
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K5/rep5
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=6005 --cv erythrura.bed 5 \
+          2>&1 | tee run.log
+        
+Job 49 has been submitted with SLURM jobid 3587421 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/5_5/3587421.log).
+
+[Thu Feb 19 09:59:26 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K3/rep10/run.log, results/admixture/runs/K3/rep10/erythrura.3.Q, results/admixture/runs/K3/rep10/erythrura.3.P
+    jobid: 34
+    reason: Missing output files: results/admixture/runs/K3/rep10/erythrura.3.P, results/admixture/runs/K3/rep10/run.log, results/admixture/runs/K3/rep10/erythrura.3.Q; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=3, rep=10
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K3/rep10
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=4010 --cv erythrura.bed 3 \
+          2>&1 | tee run.log
+        
+Job 34 has been submitted with SLURM jobid 3587422 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/3_10/3587422.log).
+
+[Thu Feb 19 09:59:26 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K2/rep6/run.log, results/admixture/runs/K2/rep6/erythrura.2.Q, results/admixture/runs/K2/rep6/erythrura.2.P
+    jobid: 20
+    reason: Missing output files: results/admixture/runs/K2/rep6/erythrura.2.P, results/admixture/runs/K2/rep6/erythrura.2.Q, results/admixture/runs/K2/rep6/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=2, rep=6
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K2/rep6
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=3006 --cv erythrura.bed 2 \
+          2>&1 | tee run.log
+        
+Job 20 has been submitted with SLURM jobid 3587423 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/2_6/3587423.log).
+
+[Thu Feb 19 09:59:26 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K2/rep1/run.log, results/admixture/runs/K2/rep1/erythrura.2.Q, results/admixture/runs/K2/rep1/erythrura.2.P
+    jobid: 15
+    reason: Missing output files: results/admixture/runs/K2/rep1/erythrura.2.P, results/admixture/runs/K2/rep1/run.log, results/admixture/runs/K2/rep1/erythrura.2.Q; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=2, rep=1
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K2/rep1
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=3001 --cv erythrura.bed 2 \
+          2>&1 | tee run.log
+        
+Job 15 has been submitted with SLURM jobid 3587424 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/2_1/3587424.log).
+
+[Thu Feb 19 09:59:26 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K4/rep8/run.log, results/admixture/runs/K4/rep8/erythrura.4.Q, results/admixture/runs/K4/rep8/erythrura.4.P
+    jobid: 42
+    reason: Missing output files: results/admixture/runs/K4/rep8/run.log, results/admixture/runs/K4/rep8/erythrura.4.Q, results/admixture/runs/K4/rep8/erythrura.4.P; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=4, rep=8
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K4/rep8
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=5008 --cv erythrura.bed 4 \
+          2>&1 | tee run.log
+        
+Job 42 has been submitted with SLURM jobid 3587425 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/4_8/3587425.log).
+
+[Thu Feb 19 09:59:26 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K3/rep3/run.log, results/admixture/runs/K3/rep3/erythrura.3.Q, results/admixture/runs/K3/rep3/erythrura.3.P
+    jobid: 27
+    reason: Missing output files: results/admixture/runs/K3/rep3/erythrura.3.P, results/admixture/runs/K3/rep3/erythrura.3.Q, results/admixture/runs/K3/rep3/run.log; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=3, rep=3
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K3/rep3
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=4003 --cv erythrura.bed 3 \
+          2>&1 | tee run.log
+        
+Job 27 has been submitted with SLURM jobid 3587426 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/3_3/3587426.log).
+
+[Thu Feb 19 09:59:27 2026]
+rule run_admixture:
+    input: results/admixture/erythrura.admix.bed, results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam
+    output: results/admixture/runs/K1/rep3/run.log, results/admixture/runs/K1/rep3/erythrura.1.Q, results/admixture/runs/K1/rep3/erythrura.1.P
+    jobid: 7
+    reason: Missing output files: results/admixture/runs/K1/rep3/run.log, results/admixture/runs/K1/rep3/erythrura.1.P, results/admixture/runs/K1/rep3/erythrura.1.Q; Input files updated by another job: results/admixture/erythrura.admix.bim, results/admixture/erythrura.admix.fam, results/admixture/erythrura.admix.bed
+    wildcards: K=1, rep=3
+    threads: 4
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        d=results/admixture/runs/K1/rep3
+        mkdir -p "$d"
+        cd "$d"
+
+        ln -sf ../../../erythrura.admix.bed erythrura.bed
+        ln -sf ../../../erythrura.admix.bim erythrura.bim
+        ln -sf ../../../erythrura.admix.fam erythrura.fam
+
+        admixture -j4 --seed=2003 --cv erythrura.bed 1 \
+          2>&1 | tee run.log
+        
+Job 7 has been submitted with SLURM jobid 3587427 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_run_admixture/1_3/3587427.log).
+[Thu Feb 19 10:00:01 2026]
+Finished jobid: 35 (Rule: run_admixture)
+5 of 55 steps (9%) done
+[Thu Feb 19 10:00:01 2026]
+Finished jobid: 13 (Rule: run_admixture)
+6 of 55 steps (11%) done
+[Thu Feb 19 10:00:01 2026]
+Finished jobid: 50 (Rule: run_admixture)
+7 of 55 steps (13%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 43 (Rule: run_admixture)
+8 of 55 steps (15%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 28 (Rule: run_admixture)
+9 of 55 steps (16%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 6 (Rule: run_admixture)
+10 of 55 steps (18%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 19 (Rule: run_admixture)
+11 of 55 steps (20%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 36 (Rule: run_admixture)
+12 of 55 steps (22%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 22 (Rule: run_admixture)
+13 of 55 steps (24%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 14 (Rule: run_admixture)
+14 of 55 steps (25%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 51 (Rule: run_admixture)
+15 of 55 steps (27%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 44 (Rule: run_admixture)
+16 of 55 steps (29%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 29 (Rule: run_admixture)
+17 of 55 steps (31%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 37 (Rule: run_admixture)
+18 of 55 steps (33%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 21 (Rule: run_admixture)
+19 of 55 steps (35%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 12 (Rule: run_admixture)
+20 of 55 steps (36%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 52 (Rule: run_admixture)
+21 of 55 steps (38%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 45 (Rule: run_admixture)
+22 of 55 steps (40%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 30 (Rule: run_admixture)
+23 of 55 steps (42%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 38 (Rule: run_admixture)
+24 of 55 steps (44%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 23 (Rule: run_admixture)
+25 of 55 steps (45%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 11 (Rule: run_admixture)
+26 of 55 steps (47%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 53 (Rule: run_admixture)
+27 of 55 steps (49%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 46 (Rule: run_admixture)
+28 of 55 steps (51%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 31 (Rule: run_admixture)
+29 of 55 steps (53%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 1 (Rule: run_admixture)
+30 of 55 steps (55%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 18 (Rule: run_admixture)
+31 of 55 steps (56%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 39 (Rule: run_admixture)
+32 of 55 steps (58%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 24 (Rule: run_admixture)
+33 of 55 steps (60%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 10 (Rule: run_admixture)
+34 of 55 steps (62%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 54 (Rule: run_admixture)
+35 of 55 steps (64%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 47 (Rule: run_admixture)
+36 of 55 steps (65%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 32 (Rule: run_admixture)
+37 of 55 steps (67%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 17 (Rule: run_admixture)
+38 of 55 steps (69%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 40 (Rule: run_admixture)
+39 of 55 steps (71%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 25 (Rule: run_admixture)
+40 of 55 steps (73%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 9 (Rule: run_admixture)
+41 of 55 steps (75%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 48 (Rule: run_admixture)
+42 of 55 steps (76%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 33 (Rule: run_admixture)
+43 of 55 steps (78%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 16 (Rule: run_admixture)
+44 of 55 steps (80%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 41 (Rule: run_admixture)
+45 of 55 steps (82%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 26 (Rule: run_admixture)
+46 of 55 steps (84%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 8 (Rule: run_admixture)
+47 of 55 steps (85%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 49 (Rule: run_admixture)
+48 of 55 steps (87%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 34 (Rule: run_admixture)
+49 of 55 steps (89%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 20 (Rule: run_admixture)
+50 of 55 steps (91%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 15 (Rule: run_admixture)
+51 of 55 steps (93%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 42 (Rule: run_admixture)
+52 of 55 steps (95%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 27 (Rule: run_admixture)
+53 of 55 steps (96%) done
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 7 (Rule: run_admixture)
+54 of 55 steps (98%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Thu Feb 19 10:00:02 2026]
+localrule admixture:
+    input: results/admixture/runs/K1/rep1/erythrura.1.Q, results/admixture/runs/K1/rep2/erythrura.1.Q, results/admixture/runs/K1/rep3/erythrura.1.Q, results/admixture/runs/K1/rep4/erythrura.1.Q, results/admixture/runs/K1/rep5/erythrura.1.Q, results/admixture/runs/K1/rep6/erythrura.1.Q, results/admixture/runs/K1/rep7/erythrura.1.Q, results/admixture/runs/K1/rep8/erythrura.1.Q, results/admixture/runs/K1/rep9/erythrura.1.Q, results/admixture/runs/K1/rep10/erythrura.1.Q, results/admixture/runs/K2/rep1/erythrura.2.Q, results/admixture/runs/K2/rep2/erythrura.2.Q, results/admixture/runs/K2/rep3/erythrura.2.Q, results/admixture/runs/K2/rep4/erythrura.2.Q, results/admixture/runs/K2/rep5/erythrura.2.Q, results/admixture/runs/K2/rep6/erythrura.2.Q, results/admixture/runs/K2/rep7/erythrura.2.Q, results/admixture/runs/K2/rep8/erythrura.2.Q, results/admixture/runs/K2/rep9/erythrura.2.Q, results/admixture/runs/K2/rep10/erythrura.2.Q, results/admixture/runs/K3/rep1/erythrura.3.Q, results/admixture/runs/K3/rep2/erythrura.3.Q, results/admixture/runs/K3/rep3/erythrura.3.Q, results/admixture/runs/K3/rep4/erythrura.3.Q, results/admixture/runs/K3/rep5/erythrura.3.Q, results/admixture/runs/K3/rep6/erythrura.3.Q, results/admixture/runs/K3/rep7/erythrura.3.Q, results/admixture/runs/K3/rep8/erythrura.3.Q, results/admixture/runs/K3/rep9/erythrura.3.Q, results/admixture/runs/K3/rep10/erythrura.3.Q, results/admixture/runs/K4/rep1/erythrura.4.Q, results/admixture/runs/K4/rep2/erythrura.4.Q, results/admixture/runs/K4/rep3/erythrura.4.Q, results/admixture/runs/K4/rep4/erythrura.4.Q, results/admixture/runs/K4/rep5/erythrura.4.Q, results/admixture/runs/K4/rep6/erythrura.4.Q, results/admixture/runs/K4/rep7/erythrura.4.Q, results/admixture/runs/K4/rep8/erythrura.4.Q, results/admixture/runs/K4/rep9/erythrura.4.Q, results/admixture/runs/K4/rep10/erythrura.4.Q, results/admixture/runs/K5/rep1/erythrura.5.Q, results/admixture/runs/K5/rep2/erythrura.5.Q, results/admixture/runs/K5/rep3/erythrura.5.Q, results/admixture/runs/K5/rep4/erythrura.5.Q, results/admixture/runs/K5/rep5/erythrura.5.Q, results/admixture/runs/K5/rep6/erythrura.5.Q, results/admixture/runs/K5/rep7/erythrura.5.Q, results/admixture/runs/K5/rep8/erythrura.5.Q, results/admixture/runs/K5/rep9/erythrura.5.Q, results/admixture/runs/K5/rep10/erythrura.5.Q, results/admixture/runs/K1/rep1/erythrura.1.P, results/admixture/runs/K1/rep2/erythrura.1.P, results/admixture/runs/K1/rep3/erythrura.1.P, results/admixture/runs/K1/rep4/erythrura.1.P, results/admixture/runs/K1/rep5/erythrura.1.P, results/admixture/runs/K1/rep6/erythrura.1.P, results/admixture/runs/K1/rep7/erythrura.1.P, results/admixture/runs/K1/rep8/erythrura.1.P, results/admixture/runs/K1/rep9/erythrura.1.P, results/admixture/runs/K1/rep10/erythrura.1.P, results/admixture/runs/K2/rep1/erythrura.2.P, results/admixture/runs/K2/rep2/erythrura.2.P, results/admixture/runs/K2/rep3/erythrura.2.P, results/admixture/runs/K2/rep4/erythrura.2.P, results/admixture/runs/K2/rep5/erythrura.2.P, results/admixture/runs/K2/rep6/erythrura.2.P, results/admixture/runs/K2/rep7/erythrura.2.P, results/admixture/runs/K2/rep8/erythrura.2.P, results/admixture/runs/K2/rep9/erythrura.2.P, results/admixture/runs/K2/rep10/erythrura.2.P, results/admixture/runs/K3/rep1/erythrura.3.P, results/admixture/runs/K3/rep2/erythrura.3.P, results/admixture/runs/K3/rep3/erythrura.3.P, results/admixture/runs/K3/rep4/erythrura.3.P, results/admixture/runs/K3/rep5/erythrura.3.P, results/admixture/runs/K3/rep6/erythrura.3.P, results/admixture/runs/K3/rep7/erythrura.3.P, results/admixture/runs/K3/rep8/erythrura.3.P, results/admixture/runs/K3/rep9/erythrura.3.P, results/admixture/runs/K3/rep10/erythrura.3.P, results/admixture/runs/K4/rep1/erythrura.4.P, results/admixture/runs/K4/rep2/erythrura.4.P, results/admixture/runs/K4/rep3/erythrura.4.P, results/admixture/runs/K4/rep4/erythrura.4.P, results/admixture/runs/K4/rep5/erythrura.4.P, results/admixture/runs/K4/rep6/erythrura.4.P, results/admixture/runs/K4/rep7/erythrura.4.P, results/admixture/runs/K4/rep8/erythrura.4.P, results/admixture/runs/K4/rep9/erythrura.4.P, results/admixture/runs/K4/rep10/erythrura.4.P, results/admixture/runs/K5/rep1/erythrura.5.P, results/admixture/runs/K5/rep2/erythrura.5.P, results/admixture/runs/K5/rep3/erythrura.5.P, results/admixture/runs/K5/rep4/erythrura.5.P, results/admixture/runs/K5/rep5/erythrura.5.P, results/admixture/runs/K5/rep6/erythrura.5.P, results/admixture/runs/K5/rep7/erythrura.5.P, results/admixture/runs/K5/rep8/erythrura.5.P, results/admixture/runs/K5/rep9/erythrura.5.P, results/admixture/runs/K5/rep10/erythrura.5.P, results/admixture/runs/K1/rep1/run.log, results/admixture/runs/K1/rep2/run.log, results/admixture/runs/K1/rep3/run.log, results/admixture/runs/K1/rep4/run.log, results/admixture/runs/K1/rep5/run.log, results/admixture/runs/K1/rep6/run.log, results/admixture/runs/K1/rep7/run.log, results/admixture/runs/K1/rep8/run.log, results/admixture/runs/K1/rep9/run.log, results/admixture/runs/K1/rep10/run.log, results/admixture/runs/K2/rep1/run.log, results/admixture/runs/K2/rep2/run.log, results/admixture/runs/K2/rep3/run.log, results/admixture/runs/K2/rep4/run.log, results/admixture/runs/K2/rep5/run.log, results/admixture/runs/K2/rep6/run.log, results/admixture/runs/K2/rep7/run.log, results/admixture/runs/K2/rep8/run.log, results/admixture/runs/K2/rep9/run.log, results/admixture/runs/K2/rep10/run.log, results/admixture/runs/K3/rep1/run.log, results/admixture/runs/K3/rep2/run.log, results/admixture/runs/K3/rep3/run.log, results/admixture/runs/K3/rep4/run.log, results/admixture/runs/K3/rep5/run.log, results/admixture/runs/K3/rep6/run.log, results/admixture/runs/K3/rep7/run.log, results/admixture/runs/K3/rep8/run.log, results/admixture/runs/K3/rep9/run.log, results/admixture/runs/K3/rep10/run.log, results/admixture/runs/K4/rep1/run.log, results/admixture/runs/K4/rep2/run.log, results/admixture/runs/K4/rep3/run.log, results/admixture/runs/K4/rep4/run.log, results/admixture/runs/K4/rep5/run.log, results/admixture/runs/K4/rep6/run.log, results/admixture/runs/K4/rep7/run.log, results/admixture/runs/K4/rep8/run.log, results/admixture/runs/K4/rep9/run.log, results/admixture/runs/K4/rep10/run.log, results/admixture/runs/K5/rep1/run.log, results/admixture/runs/K5/rep2/run.log, results/admixture/runs/K5/rep3/run.log, results/admixture/runs/K5/rep4/run.log, results/admixture/runs/K5/rep5/run.log, results/admixture/runs/K5/rep6/run.log, results/admixture/runs/K5/rep7/run.log, results/admixture/runs/K5/rep8/run.log, results/admixture/runs/K5/rep9/run.log, results/admixture/runs/K5/rep10/run.log
+    jobid: 0
+    reason: Input files updated by another job: results/admixture/runs/K3/rep6/erythrura.3.Q, results/admixture/runs/K3/rep2/run.log, results/admixture/runs/K1/rep3/erythrura.1.Q, results/admixture/runs/K1/rep9/run.log, results/admixture/runs/K5/rep3/run.log, results/admixture/runs/K5/rep2/erythrura.5.P, results/admixture/runs/K4/rep10/run.log, results/admixture/runs/K3/rep9/erythrura.3.P, results/admixture/runs/K2/rep5/erythrura.2.Q, results/admixture/runs/K2/rep9/run.log, results/admixture/runs/K5/rep9/run.log, results/admixture/runs/K5/rep5/run.log, results/admixture/runs/K4/rep8/run.log, results/admixture/runs/K3/rep7/erythrura.3.Q, results/admixture/runs/K4/rep10/erythrura.4.P, results/admixture/runs/K4/rep4/erythrura.4.P, results/admixture/runs/K2/rep5/erythrura.2.P, results/admixture/runs/K2/rep1/erythrura.2.Q, results/admixture/runs/K3/rep8/erythrura.3.P, results/admixture/runs/K2/rep7/erythrura.2.P, results/admixture/runs/K3/rep8/erythrura.3.Q, results/admixture/runs/K1/rep5/erythrura.1.Q, results/admixture/runs/K5/rep3/erythrura.5.Q, results/admixture/runs/K4/rep9/erythrura.4.P, results/admixture/runs/K2/rep10/erythrura.2.Q, results/admixture/runs/K4/rep2/run.log, results/admixture/runs/K1/rep7/run.log, results/admixture/runs/K3/rep3/erythrura.3.Q, results/admixture/runs/K3/rep5/erythrura.3.P, results/admixture/runs/K1/rep4/erythrura.1.P, results/admixture/runs/K4/rep1/erythrura.4.Q, results/admixture/runs/K1/rep7/erythrura.1.P, results/admixture/runs/K1/rep5/run.log, results/admixture/runs/K3/rep5/run.log, results/admixture/runs/K3/rep2/erythrura.3.P, results/admixture/runs/K4/rep6/run.log, results/admixture/runs/K5/rep9/erythrura.5.Q, results/admixture/runs/K2/rep2/erythrura.2.P, results/admixture/runs/K1/rep6/run.log, results/admixture/runs/K2/rep4/erythrura.2.Q, results/admixture/runs/K2/rep4/erythrura.2.P, results/admixture/runs/K2/rep6/erythrura.2.Q, results/admixture/runs/K4/rep3/erythrura.4.P, results/admixture/runs/K5/rep10/erythrura.5.P, results/admixture/runs/K5/rep6/erythrura.5.Q, results/admixture/runs/K5/rep9/erythrura.5.P, results/admixture/runs/K1/rep4/erythrura.1.Q, results/admixture/runs/K3/rep8/run.log, results/admixture/runs/K5/rep7/erythrura.5.Q, results/admixture/runs/K5/rep10/run.log, results/admixture/runs/K4/rep3/run.log, results/admixture/runs/K2/rep1/run.log, results/admixture/runs/K1/rep8/run.log, results/admixture/runs/K2/rep7/erythrura.2.Q, results/admixture/runs/K1/rep2/erythrura.1.Q, results/admixture/runs/K3/rep10/erythrura.3.Q, results/admixture/runs/K3/rep6/erythrura.3.P, results/admixture/runs/K1/rep10/run.log, results/admixture/runs/K1/rep1/erythrura.1.Q, results/admixture/runs/K1/rep10/erythrura.1.Q, results/admixture/runs/K2/rep6/run.log, results/admixture/runs/K5/rep4/run.log, results/admixture/runs/K5/rep8/erythrura.5.Q, results/admixture/runs/K4/rep10/erythrura.4.Q, results/admixture/runs/K1/rep7/erythrura.1.Q, results/admixture/runs/K3/rep4/erythrura.3.P, results/admixture/runs/K5/rep8/erythrura.5.P, results/admixture/runs/K5/rep2/run.log, results/admixture/runs/K4/rep6/erythrura.4.Q, results/admixture/runs/K1/rep1/run.log, results/admixture/runs/K5/rep5/erythrura.5.Q, results/admixture/runs/K1/rep2/run.log, results/admixture/runs/K1/rep6/erythrura.1.Q, results/admixture/runs/K4/rep7/run.log, results/admixture/runs/K3/rep1/erythrura.3.P, results/admixture/runs/K5/rep3/erythrura.5.P, results/admixture/runs/K5/rep7/erythrura.5.P, results/admixture/runs/K4/rep2/erythrura.4.Q, results/admixture/runs/K5/rep7/run.log, results/admixture/runs/K2/rep8/erythrura.2.Q, results/admixture/runs/K2/rep9/erythrura.2.Q, results/admixture/runs/K5/rep1/erythrura.5.P, results/admixture/runs/K5/rep8/run.log, results/admixture/runs/K3/rep3/erythrura.3.P, results/admixture/runs/K4/rep5/run.log, results/admixture/runs/K4/rep9/run.log, results/admixture/runs/K1/rep8/erythrura.1.P, results/admixture/runs/K2/rep8/erythrura.2.P, results/admixture/runs/K5/rep1/run.log, results/admixture/runs/K5/rep6/erythrura.5.P, results/admixture/runs/K1/rep4/run.log, results/admixture/runs/K2/rep9/erythrura.2.P, results/admixture/runs/K4/rep8/erythrura.4.Q, results/admixture/runs/K1/rep6/erythrura.1.P, results/admixture/runs/K3/rep5/erythrura.3.Q, results/admixture/runs/K4/rep2/erythrura.4.P, results/admixture/runs/K1/rep10/erythrura.1.P, results/admixture/runs/K1/rep3/run.log, results/admixture/runs/K4/rep1/erythrura.4.P, results/admixture/runs/K4/rep6/erythrura.4.P, results/admixture/runs/K2/rep3/erythrura.2.P, results/admixture/runs/K1/rep9/erythrura.1.Q, results/admixture/runs/K2/rep10/erythrura.2.P, results/admixture/runs/K4/rep7/erythrura.4.Q, results/admixture/runs/K2/rep6/erythrura.2.P, results/admixture/runs/K3/rep2/erythrura.3.Q, results/admixture/runs/K3/rep4/run.log, results/admixture/runs/K4/rep5/erythrura.4.P, results/admixture/runs/K2/rep8/run.log, results/admixture/runs/K3/rep9/run.log, results/admixture/runs/K4/rep3/erythrura.4.Q, results/admixture/runs/K4/rep7/erythrura.4.P, results/admixture/runs/K2/rep2/erythrura.2.Q, results/admixture/runs/K4/rep1/run.log, results/admixture/runs/K3/rep7/run.log, results/admixture/runs/K1/rep2/erythrura.1.P, results/admixture/runs/K5/rep2/erythrura.5.Q, results/admixture/runs/K5/rep4/erythrura.5.Q, results/admixture/runs/K4/rep9/erythrura.4.Q, results/admixture/runs/K2/rep4/run.log, results/admixture/runs/K2/rep1/erythrura.2.P, results/admixture/runs/K1/rep3/erythrura.1.P, results/admixture/runs/K2/rep7/run.log, results/admixture/runs/K5/rep1/erythrura.5.Q, results/admixture/runs/K3/rep10/erythrura.3.P, results/admixture/runs/K3/rep9/erythrura.3.Q, results/admixture/runs/K1/rep8/erythrura.1.Q, results/admixture/runs/K4/rep4/run.log, results/admixture/runs/K5/rep5/erythrura.5.P, results/admixture/runs/K3/rep1/erythrura.3.Q, results/admixture/runs/K5/rep4/erythrura.5.P, results/admixture/runs/K1/rep1/erythrura.1.P, results/admixture/runs/K2/rep2/run.log, results/admixture/runs/K3/rep10/run.log, results/admixture/runs/K5/rep6/run.log, results/admixture/runs/K3/rep1/run.log, results/admixture/runs/K3/rep4/erythrura.3.Q, results/admixture/runs/K3/rep6/run.log, results/admixture/runs/K4/rep4/erythrura.4.Q, results/admixture/runs/K4/rep8/erythrura.4.P, results/admixture/runs/K3/rep3/run.log, results/admixture/runs/K2/rep3/run.log, results/admixture/runs/K5/rep10/erythrura.5.Q, results/admixture/runs/K3/rep7/erythrura.3.P, results/admixture/runs/K2/rep5/run.log, results/admixture/runs/K2/rep10/run.log, results/admixture/runs/K1/rep5/erythrura.1.P, results/admixture/runs/K1/rep9/erythrura.1.P, results/admixture/runs/K4/rep5/erythrura.4.Q, results/admixture/runs/K2/rep3/erythrura.2.Q
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=/tmp, runtime=8640, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: None
+[Thu Feb 19 10:00:02 2026]
+Finished jobid: 0 (Rule: admixture)
+55 of 55 steps (100%) done
+Cleaning up SLURM log files older than 10 day(s).
+Complete log(s): /home/k14m234/erythrura/.snakemake/log/2026-02-19T095639.004265.snakemake.log

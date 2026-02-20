@@ -1,0 +1,101 @@
+Using workflow specific profile /home/k14m234/erythrura/workflow-profiles/ for setting default command line arguments.
+host: epyc018
+Building DAG of jobs...
+You are running snakemake in a SLURM job context. This is not recommended, as it may lead to unexpected behavior. If possible, please run Snakemake directly on the login node.
+SLURM run ID: 0b284fae-465f-494b-9108-8e204fcd98f8
+MinJobAge 300s (>= 120s). 'squeue' should work reliably for status queries.
+Using shell: /usr/bin/bash
+Provided remote nodes: 8
+Job stats:
+job                            count
+---------------------------  -------
+all_windows_with_genes             1
+intersect_all_windows_genes        1
+vcftools_windows_to_bed            1
+windows_annotated                  1
+total                              4
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Wed Feb 18 13:44:19 2026]
+rule vcftools_windows_to_bed:
+    input: results/vcftools/ingroup_fst_w50k_s10k.windowed.weir.fst
+    output: results/fst/all_windows.bed
+    jobid: 2
+    reason: Missing output files: results/fst/all_windows.bed
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=4320, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        mkdir -p results/fst
+        # BED: chrom start0 end name mean_fst
+        awk 'BEGIN{OFS="\t"} NR==1{next}
+             $6!="NA" && $6!="-nan" {
+               print $1, $2-1, $3, "win_"$1":"$2"-"$3, $6
+             }' results/vcftools/ingroup_fst_w50k_s10k.windowed.weir.fst \
+        | sort -k1,1 -k2,2n > results/fst/all_windows.bed
+        
+Job 2 has been submitted with SLURM jobid 3585215 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_vcftools_windows_to_bed/3585215.log).
+Waiting at most 60 seconds for missing files:
+results/fst/all_windows.bed (missing locally)
+[Wed Feb 18 13:45:18 2026]
+Finished jobid: 2 (Rule: vcftools_windows_to_bed)
+1 of 4 steps (25%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Wed Feb 18 13:45:18 2026]
+rule intersect_all_windows_genes:
+    input: results/fst/all_windows.bed, resources/annotation/genes.bed
+    output: results/fst/all_window_gene_intersections.tsv
+    jobid: 3
+    reason: Missing output files: results/fst/all_window_gene_intersections.tsv; Input files updated by another job: results/fst/all_windows.bed
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=4320, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        bedtools intersect -wa -wb -a results/fst/all_windows.bed -b resources/annotation/genes.bed > results/fst/all_window_gene_intersections.tsv
+        
+Job 3 has been submitted with SLURM jobid 3585217 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_intersect_all_windows_genes/3585217.log).
+[Wed Feb 18 13:45:34 2026]
+Finished jobid: 3 (Rule: intersect_all_windows_genes)
+2 of 4 steps (50%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Wed Feb 18 13:45:34 2026]
+rule all_windows_with_genes:
+    input: results/vcftools/ingroup_fst_w50k_s10k.windowed.weir.fst, results/fst/all_windows.bed, results/fst/all_window_gene_intersections.tsv
+    output: results/fst/all_windows_with_genes.tsv.gz
+    jobid: 1
+    reason: Missing output files: results/fst/all_windows_with_genes.tsv.gz; Input files updated by another job: results/fst/all_windows.bed, results/fst/all_window_gene_intersections.tsv
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=4320, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+        mkdir -p results/fst
+        python scripts/02_summarize_all_windows.py \
+          --fst results/vcftools/ingroup_fst_w50k_s10k.windowed.weir.fst \
+          --bed results/fst/all_windows.bed \
+          --intersections results/fst/all_window_gene_intersections.tsv \
+          --out results/fst/all_windows_with_genes.tsv
+
+        gzip -f results/fst/all_windows_with_genes.tsv
+        
+Job 1 has been submitted with SLURM jobid 3585218 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_all_windows_with_genes/3585218.log).
+[Wed Feb 18 13:46:15 2026]
+Finished jobid: 1 (Rule: all_windows_with_genes)
+3 of 4 steps (75%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Wed Feb 18 13:46:15 2026]
+localrule windows_annotated:
+    input: results/fst/all_windows_with_genes.tsv.gz
+    jobid: 0
+    reason: Input files updated by another job: results/fst/all_windows_with_genes.tsv.gz
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=/tmp, runtime=4320, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: None
+[Wed Feb 18 13:46:15 2026]
+Finished jobid: 0 (Rule: windows_annotated)
+4 of 4 steps (100%) done
+Cleaning up SLURM log files older than 10 day(s).
+Complete log(s): /home/k14m234/erythrura/.snakemake/log/2026-02-18T134413.248169.snakemake.log

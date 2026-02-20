@@ -1,0 +1,7 @@
+Using workflow specific profile /home/k14m234/erythrura/workflow-profiles/ for setting default command line arguments.
+host: epyc008
+Building DAG of jobs...
+You are running snakemake in a SLURM job context. This is not recommended, as it may lead to unexpected behavior. If possible, please run Snakemake directly on the login node.
+SLURM run ID: 18682ac5-9aa9-4a4f-ba48-b8340cd8cd38
+MinJobAge 300s (>= 120s). 'squeue' should work reliably for status queries.
+Nothing to be done (all requested files are present and up to date).

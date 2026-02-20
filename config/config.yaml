@@ -1,0 +1,8 @@
+reference:
+  accession: "GCF_005870125.1"
+
+fst_scan:
+  vcftools_windows: "results/vcftools/ingroup_fst_w50k_s10k.windowed.weir.fst"
+  quantile: 0.999
+  candidate_gene: "BMP4"
+

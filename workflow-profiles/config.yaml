@@ -10,7 +10,7 @@ rerun-incomplete: true
 # Cluster defaults for rules unless overridden
 default-resources:
   mem_mb: 16000
-  runtime: 4320          # minutes
+  runtime: 8640          # minutes
   slurm_partition: priority
   slurm_account: priority-ethanlinck
 

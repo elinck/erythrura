@@ -1,0 +1,13 @@
+name: fst_outliers
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.11
+  - pandas
+  - numpy
+  - bedtools
+  - htslib
+  - ncbi-datasets-cli
+

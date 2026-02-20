@@ -1,3 +1,5 @@
 .snakemake
 results
+resources
 scripts/data/shp
+scripts/.ipynb_checkpoints

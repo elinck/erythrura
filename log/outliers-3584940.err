@@ -1,0 +1,91 @@
+Using workflow specific profile /home/k14m234/erythrura/workflow-profiles/ for setting default command line arguments.
+host: epyc017
+Building DAG of jobs...
+You are running snakemake in a SLURM job context. This is not recommended, as it may lead to unexpected behavior. If possible, please run Snakemake directly on the login node.
+SLURM run ID: 2da29d5b-d0f8-48f2-a1c0-e0842e171166
+MinJobAge 300s (>= 120s). 'squeue' should work reliably for status queries.
+Using shell: /usr/bin/bash
+Provided remote nodes: 8
+Job stats:
+job                              count
+-----------------------------  -------
+outliers                             1
+summarize_outliers_with_genes        1
+total                                2
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Wed Feb 18 11:55:25 2026]
+rule summarize_outliers_with_genes:
+    input: results/outliers/top0.1pct_fst_windows.tsv, results/outliers/outlier_gene_intersections.tsv
+    output: results/outliers/top0.1pct_fst_windows_with_genes.tsv.gz
+    jobid: 1
+    reason: Missing output files: results/outliers/top0.1pct_fst_windows_with_genes.tsv.gz; Code has changed since last execution
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, runtime=4320, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: 
+        set -euo pipefail
+
+        python scripts/01_summarize_intersections.py \
+          --intersections results/outliers/outlier_gene_intersections.tsv \
+          --candidate BMP4 \
+          --out results/outliers/_tmp_with_genes.tsv
+
+        python - <<'PY'
+import pandas as pd
+acc = "GCF_005870125.1"
+
+outliers = pd.read_csv("results/outliers/top0.1pct_fst_windows.tsv", sep="\t")
+
+# create BED coords from vcftools coords
+outliers["chrom"] = outliers["CHROM"].astype(str)
+outliers["start"] = outliers["BIN_START"].astype(int) - 1
+outliers["end"]   = outliers["BIN_END"].astype(int)
+
+summ = pd.read_csv("results/outliers/_tmp_with_genes.tsv", sep="\t")
+
+merged = outliers.merge(
+    summ[["chrom","start","end","gene_hits","genes","candidate_hit"]],
+    on=["chrom","start","end"],
+    how="left"
+)
+
+merged["gene_hits"] = merged["gene_hits"].fillna(0).astype(int)
+merged["genes"] = merged["genes"].fillna(".")
+merged["candidate_hit"] = merged["candidate_hit"].fillna(False)
+merged["ref_accession"] = acc
+merged = merged.drop(columns=["chrom","start","end"])
+
+# nice ordering
+cols_first = ["ref_accession","rank","CHROM","BIN_START","BIN_END","N_VARIANTS","WEIGHTED_FST","MEAN_FST",
+              "gene_hits","genes","candidate_hit","cutoff_mean_fst","quantile"]
+cols = [c for c in cols_first if c in merged.columns] + [c for c in merged.columns if c not in cols_first]
+merged = merged[cols].sort_values(["MEAN_FST","rank"], ascending=[False, True])
+
+merged.to_csv("results/outliers/top0.1pct_fst_windows_with_genes.tsv", sep="\t", index=False)
+PY
+
+        bgzip -f results/outliers/top0.1pct_fst_windows_with_genes.tsv
+        rm -f results/outliers/_tmp_with_genes.tsv
+        
+Job 1 has been submitted with SLURM jobid 3584941 (log: /home/k14m234/erythrura/.snakemake/slurm_logs/rule_summarize_outliers_with_genes/3584941.log).
+Waiting at most 60 seconds for missing files:
+results/outliers/top0.1pct_fst_windows_with_genes.tsv.gz (missing locally)
+[Wed Feb 18 11:56:24 2026]
+Finished jobid: 1 (Rule: summarize_outliers_with_genes)
+1 of 2 steps (50%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Wed Feb 18 11:56:24 2026]
+localrule outliers:
+    input: results/outliers/top0.1pct_fst_windows_with_genes.tsv.gz
+    jobid: 0
+    reason: Input files updated by another job: results/outliers/top0.1pct_fst_windows_with_genes.tsv.gz
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=/tmp, runtime=4320, slurm_partition=priority, slurm_account=priority-ethanlinck
+Shell command: None
+[Wed Feb 18 11:56:24 2026]
+Finished jobid: 0 (Rule: outliers)
+2 of 2 steps (100%) done
+Cleaning up SLURM log files older than 10 day(s).
+Complete log(s): /home/k14m234/erythrura/.snakemake/log/2026-02-18T115519.268016.snakemake.log
