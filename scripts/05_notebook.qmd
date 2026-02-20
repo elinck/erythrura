@@ -1,5 +1,7 @@
 ---
-format: html
+format:
+  html:
+    embed-resources: true
 ---
 
 # Species limits and divergence in New Guinea *Erythrura*
