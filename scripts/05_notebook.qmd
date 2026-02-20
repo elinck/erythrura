@@ -523,7 +523,7 @@ desc <- AnnotationDbi::select(
 desc
 ```
 
-Our final preliminary question is whether *trichroa* and *erythrura* are similar due to recent divergence and shared ancestry, secondary contact and hybridization, or divergence with gene flow. We fit demographic models in `dadi2`, ran optimization replicates, and estimated parameter uncertainty via bootstrapping. An IM model is a better fit than either SC or SI ("strict isolation"), though note the spread across replicates:
+Our final preliminary question is whether *trichroa* and *erythrura* are similar due to recent divergence and shared ancestry, secondary contact and hybridization, or divergence with gene flow. We fit demographic models in `dadi2`, ran optimization replicates, and estimated parameter uncertainty via bootstrapping. 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # compare model fit
@@ -553,7 +553,7 @@ p8 <- ggplot(df_top, aes(x=model,y=ll_model)) +
   xlab("Model")
 p8
 ```
-The best run is an SC run by AIC and log-likelihood:
+The best run is an SC ("secondary contact") run by AIC and log-likelihood:
 
 ```{r, message=FALSE, warning=FALSE}
 best_aic <- mod_df[which.min(mod_df$AIC),]
@@ -576,7 +576,7 @@ We can convert these to "real units" with an estimated mutation rate, sequence c
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 mu <- 2.3e-9            # per-site per-generation mutation rate
 L  <- 1010218420        # from awk '{sum += $3-$2} END{print sum}' erythrura_callable_sites.bed 
-gen_time <- 1.0         # probably
+gen_time <- 1.0         # probably?
 model_fits <- im %>% dplyr::select(rep, theta)
 params_real <- params %>%
   mutate(rep = as.double(rep)) %>% 

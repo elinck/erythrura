@@ -258,16 +258,16 @@ runs <- tibble(q_path = q_files) %>%
 
 runs <- runs %>% 
   mutate(log_txt = map_chr(log_path, ~ if (file.exists(.x)) read_file(.x) else ""), 
-    cv = map_dbl(log_txt, parse_cv)) %>% select(-log_txt)
+    cv = map_dbl(log_txt, parse_cv)) %>% dplyr::select(-log_txt)
 
 best_runs <- runs %>%
   group_by(K) %>%
   arrange(cv, rep, .by_group = TRUE) %>%
-  slice(1) %>%
+  dplyr::slice(1) %>%
   ungroup()
 
 check <- best_runs %>%
-  mutate(ncol_q = purrr::map_int(q_path, ~ ncol(readr::read_table2(.x, col_names = FALSE)))) %>%
+  mutate(ncol_q = purrr::map_int(q_path, ~ ncol(readr::read_table(.x, col_names = FALSE)))) %>%
   mutate(ok = (ncol_q == K))
 print(check)
 
@@ -292,7 +292,7 @@ best_q_long <- best_runs %>%
 write_tsv(best_q_long, file.path("/home/k14m234/erythrura/results/admixture", "bestQ_long.tsv"))
 
 best_q_wide <- best_q_long %>%
-  select(K, rep, IID, species, cluster, q) %>%
+  dplyr::select(K, rep, IID, species, cluster, q) %>%
   pivot_wider(names_from = cluster, values_from = q, names_prefix = "Q")
 
 write_tsv(best_q_wide, file.path("/home/k14m234/erythrura/results/admixture", "bestQ_wide.tsv"))
@@ -558,14 +558,11 @@ axis_df_out <- fst_out_chr %>%
   ) %>%
   filter(chr_size >= 2.5e7, !is.na(mid))
 
-# threshold (top 0.1% by default)
-thr <- quantile(fst_in_chr$MEAN_FST, 0.9999, na.rm = TRUE)
-
-# candidate list
-cands <- read_lines("erythrura/config/candidates_beak.txt") %>%
+cands <- read_lines("/home/k14m234/erythrura/config/candidates_beak.txt") %>%
   str_trim() %>%
   discard(~ .x == "" | str_starts(.x, "#")) %>%
-  unique()
+  base::unique()
+
 
 # find best hit per candidate gene 
 cand_hits <- fst_out_chr %>%
@@ -576,7 +573,6 @@ cand_hits <- fst_out_chr %>%
   group_by(genes) %>%
   slice_max(order_by = MEAN_FST, n = 1, with_ties = FALSE) %>%
   ungroup() %>%
-  rename(gene = genes) %>%
   mutate(fst_pct = percent_rank(MEAN_FST))
 
 # find outliers
@@ -588,7 +584,6 @@ outlier_hits <- fst_out_chr %>%
   group_by(genes) %>%
   slice_max(order_by = MEAN_FST, n = 1, with_ties = FALSE) %>%
   ungroup() %>%
-  rename(gene = genes) %>%
   mutate(fst_pct = percent_rank(MEAN_FST))
 
 # plot same aesthetic
@@ -618,13 +613,13 @@ p10 <- ggplot(fst_out_chr, aes(x = bp_cum, y = MEAN_FST, color = chr)) +
   ) +
   ggrepel::geom_text_repel(
     data = cand_hits,
-    aes(x = bp_cum, y = MEAN_FST, label = gene),
+    aes(x = bp_cum, y = MEAN_FST, label = genes),
     inherit.aes = FALSE,
     size = 3, max.overlaps = 50
   ) +
   ggrepel::geom_text_repel(
     data = outlier_hits,
-    aes(x = bp_cum, y = MEAN_FST, label = gene),
+    aes(x = bp_cum, y = MEAN_FST, label = genes),
     inherit.aes = FALSE,
     size = 3, max.overlaps = 50
   ) +
@@ -696,7 +691,7 @@ special_hits %>%
 # check peak around BMP10
 bmp10_region <- fst_out_chr %>%
   filter(CHROM == "NC_042587.1",
-         BIN_START >= 3600000,x
+         BIN_START >= 3600000,
          BIN_START <= 5600000)
 
 # check ID of special genes
@@ -799,9 +794,9 @@ si <- read_tsv("erythrura/scripts/dadi/si_model.tsv", col_names = FALSE)[,-1]
 colnames(im) <- c("ll_model", "nTri","nPap","tSplit","m12","m21","theta")
 colnames(sc) <- c("ll_model", "nTri","nPap","tSplit","tContact","m12","m21","theta")
 colnames(si) <- c("ll_model", "nTri","nPap","tSplit", "theta")
-im <- im %>% mutate(model = "IM", AIC = -2*ll_model + 2*6) %>% select(model, AIC, ll_model)
-sc <- sc %>% mutate(model = "SC", AIC = -2*ll_model + 2*7) %>% select(model, AIC, ll_model)
-si <- si %>% mutate(model = "SI", AIC = -2*ll_model + 2*4) %>% select(model, AIC, ll_model)
+im <- im %>% mutate(model = "IM", AIC = -2*ll_model + 2*6) %>% dplyr::select(model, AIC, ll_model)
+sc <- sc %>% mutate(model = "SC", AIC = -2*ll_model + 2*7) %>% dplyr::select(model, AIC, ll_model)
+si <- si %>% mutate(model = "SI", AIC = -2*ll_model + 2*4) %>% dplyr::select(model, AIC, ll_model)
 mod.df <- bind_rows(im, sc, si)
 
 # get best supported model
@@ -814,23 +809,22 @@ df_top <- mod.df %>%
   slice_max(ll_model, n = 20)   # keep top 20 per model
 
 # plot model comparison
-p8 <- ggplot(df_top, aes(x=model,y=ll_model)) +
+p12 <- ggplot(df_top, aes(x=model,y=ll_model)) +
   geom_boxplot() +
   geom_jitter(pch=21, size=2) +
   theme_classic() +
   theme(panel.grid = element_blank()) +
   ylab("Log-likelihood") +
   xlab("Model")
-p8
+p12
 
 # export
 ggsave(
   filename = "/home/k14m234/erythrura/scripts/figures/model_fits.pdf",
-  plot = p8,
+  plot = p12,
   device = cairo_pdf,
   width = 5,
   height = 4,
   units = "in"
 )
-
 
